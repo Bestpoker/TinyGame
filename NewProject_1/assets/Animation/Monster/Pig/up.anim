@@ -1,0 +1,49 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "Pig_up",
+  "_objFlags": 0,
+  "_native": "",
+  "_duration": 0.6833333333333333,
+  "sample": 60,
+  "speed": 1,
+  "wrapMode": "2",
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "3ae08836-22ed-4edb-bee4-ea6b91937ed4"
+            }
+          },
+          {
+            "frame": 0.16666666666666666,
+            "value": {
+              "__uuid__": "4a3af34a-b50a-48ba-a041-8958e8fd0814"
+            }
+          },
+          {
+            "frame": 0.3333333333333333,
+            "value": {
+              "__uuid__": "3ae08836-22ed-4edb-bee4-ea6b91937ed4"
+            }
+          },
+          {
+            "frame": 0.5,
+            "value": {
+              "__uuid__": "57e1fd45-d7c2-425f-89d4-9bbc008d3532"
+            }
+          },
+          {
+            "frame": 0.6666666666666666,
+            "value": {
+              "__uuid__": "3ae08836-22ed-4edb-bee4-ea6b91937ed4"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "events": []
+}
