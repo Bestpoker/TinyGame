@@ -8,7 +8,7 @@
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/life-cycle-callbacks.html
 //  - [English] http://www.cocos2d-x.org/docs/creator/manual/en/scripting/life-cycle-callbacks.html
 
-enum Direction {
+export enum Direction {
     None,
     Up,
     Down,
@@ -28,7 +28,7 @@ export default class Monster extends cc.Component {
     ani: cc.Animation = null;
     
 
-    dir: Direction = Direction.None;
+    currentDir: Direction = Direction.None;
 
     nextDir: Direction = Direction.Up;
 
@@ -45,7 +45,7 @@ export default class Monster extends cc.Component {
     // update (dt) {}
 
 
-    Run(dt: any) {
+    MyUpdate(dt: any) {
 
         if(this.nextDir == Direction.Up){
             if(this.node.position.x <= -150){
@@ -78,8 +78,8 @@ export default class Monster extends cc.Component {
     }
 
     RunLeft(){
-        if (this.dir != Direction.Left){
-            this.dir = Direction.Left;
+        if (this.currentDir != Direction.Left){
+            this.currentDir = Direction.Left;
             this.node.stopAllActions();
             var dest: cc.Vec2 = new cc.Vec2(-270, this.node.y);
             var cha = Math.abs(dest.x - this.node.x);
@@ -91,8 +91,8 @@ export default class Monster extends cc.Component {
     }
 
     RunRight(){
-        if (this.dir != Direction.Right){
-            this.dir = Direction.Right;
+        if (this.currentDir != Direction.Right){
+            this.currentDir = Direction.Right;
             this.node.stopAllActions();
             var dest: cc.Vec2 = new cc.Vec2(270, this.node.y);
             var cha = Math.abs(dest.x - this.node.x);
@@ -105,8 +105,8 @@ export default class Monster extends cc.Component {
     }
 
     RunUp(){
-        if (this.dir != Direction.Up){
-            this.dir = Direction.Up;
+        if (this.currentDir != Direction.Up){
+            this.currentDir = Direction.Up;
             this.node.stopAllActions();
             var dest: cc.Vec2 = new cc.Vec2(this.node.x, 480);
             var cha = Math.abs(dest.y - this.node.y);
@@ -119,8 +119,8 @@ export default class Monster extends cc.Component {
     }
 
     RunDown(){
-        if (this.dir != Direction.Down){
-            this.dir = Direction.Down;
+        if (this.currentDir != Direction.Down){
+            this.currentDir = Direction.Down;
             this.node.stopAllActions();
             var dest: cc.Vec2 = new cc.Vec2(this.node.x, -480);
             var cha = Math.abs(dest.y - this.node.y);

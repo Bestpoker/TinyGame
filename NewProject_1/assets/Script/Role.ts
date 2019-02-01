@@ -1,3 +1,5 @@
+import Monster, { Direction } from "./Monster";
+
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
 //  - [English] http://www.cocos2d-x.org/docs/creator/manual/en/scripting/typescript.html
@@ -8,27 +10,127 @@
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/life-cycle-callbacks.html
 //  - [English] http://www.cocos2d-x.org/docs/creator/manual/en/scripting/life-cycle-callbacks.html
 
-const {ccclass, property} = cc._decorator;
+const { ccclass, property } = cc._decorator;
 
 @ccclass
 export default class Role extends cc.Component {
 
-    @property(cc.Animation)
-    ani: cc.Animation = null;
+  @property(cc.Float)
+  speed = 50;
 
-    @property(cc.Float)
-    speed = 1;
+  @property(cc.Float)
+  minDis = 2;
 
-    // LIFE-CYCLE CALLBACKS:
+  @property(cc.Animation)
+  ani: cc.Animation = null;
 
-    // onLoad () {}
 
-    start () {
-      this.ani.play("Role_1_up");
+  currentDir: Direction = Direction.None;
+
+  target: Monster = null;
+
+
+
+  // LIFE-CYCLE CALLBACKS:
+
+  // onLoad () {}
+
+  start() {
+    // this.ani.play("Role_1_up");
+  }
+
+  //  update (dt) {
+
+  //  }
+
+  MyUpdate(dt: any) {
+
+    if (this.target != null) {
+
+      var x = this.target.node.x - this.node.x;
+      var y = this.target.node.y - this.node.y;
+
+      if (Math.abs(x) > this.minDis) {
+        if (x > 0) {
+          this.RunRight();
+
+        }
+        else if (x < 0) {
+          this.RunLeft();
+        }
+      }
+      else if (Math.abs(y) > this.minDis) {
+        if (y > 0) {
+          this.RunUp();
+
+        }
+        else if (y < 0) {
+          this.RunDown();
+
+        }
+
+      }
     }
 
-     update (dt) {
-      this.node.y = this.node.position.y + this.speed * 100 * dt;
-         
-     }
+
+  }
+
+  SetTarget(monster: Monster) {
+    this.target = monster;
+  }
+
+  RunLeft() {
+    if (this.currentDir != Direction.Left) {
+      this.currentDir = Direction.Left;
+      this.node.stopAllActions();
+      var dest: cc.Vec2 = new cc.Vec2(-270, this.node.y);
+      var cha = Math.abs(dest.x - this.node.x);
+      var time = cha / this.speed;
+      var action = cc.moveTo(time, dest);
+      this.node.runAction(action);
+      this.ani.play("left");
+    }
+  }
+
+  RunRight() {
+    if (this.currentDir != Direction.Right) {
+      this.currentDir = Direction.Right;
+      this.node.stopAllActions();
+      var dest: cc.Vec2 = new cc.Vec2(270, this.node.y);
+      var cha = Math.abs(dest.x - this.node.x);
+      var time = cha / this.speed;
+      var action = cc.moveTo(time, dest);
+      this.node.runAction(action);
+      this.ani.play("right");
+    }
+
+  }
+
+  RunUp() {
+    if (this.currentDir != Direction.Up) {
+      this.currentDir = Direction.Up;
+      this.node.stopAllActions();
+      var dest: cc.Vec2 = new cc.Vec2(this.node.x, 480);
+      var cha = Math.abs(dest.y - this.node.y);
+      var time = cha / this.speed;
+      var action = cc.moveTo(time, dest);
+      this.node.runAction(action);
+      this.ani.play("up");
+    }
+
+  }
+
+  RunDown() {
+    if (this.currentDir != Direction.Down) {
+      this.currentDir = Direction.Down;
+      this.node.stopAllActions();
+      var dest: cc.Vec2 = new cc.Vec2(this.node.x, -480);
+      var cha = Math.abs(dest.y - this.node.y);
+      var time = cha / this.speed;
+      var action = cc.moveTo(time, dest);
+      this.node.runAction(action);
+      this.ani.play("down");
+    }
+
+  }
 }

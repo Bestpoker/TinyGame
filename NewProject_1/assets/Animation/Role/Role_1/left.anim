@@ -1,12 +1,12 @@
 {
   "__type__": "cc.AnimationClip",
-  "_name": "Role_1_left",
+  "_name": "left",
   "_objFlags": 0,
   "_native": "",
   "_duration": 0.6833333333333333,
   "sample": 60,
   "speed": 1,
-  "wrapMode": 1,
+  "wrapMode": "2",
   "curveData": {
     "comps": {
       "cc.Sprite": {
