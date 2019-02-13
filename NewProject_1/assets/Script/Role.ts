@@ -1,4 +1,6 @@
 import Monster, { Direction } from "./Monster";
+import ShaderComponent from "./ShaderComponent";
+import { ShaderType } from "./ShaderManager";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -15,122 +17,113 @@ const { ccclass, property } = cc._decorator;
 @ccclass
 export default class Role extends cc.Component {
 
-  @property(cc.Float)
-  speed = 50;
+  @property(ShaderComponent)
+  shaderCom: ShaderComponent = null;
 
-  @property(cc.Float)
-  minDis = 2;
+  @property(cc.Sprite)
+  sprite: cc.Sprite = null;
 
-  @property(cc.Animation)
-  ani: cc.Animation = null;
-
-
-  currentDir: Direction = Direction.None;
-
-  target: Monster = null;
-
+  _resID: number = 0;
+  get resID() { return this._resID; }
+  set resID(res) {
+    this._resID = res;
+    if (this._resID > 0) {
+      var self = this;
+      cc.loader.loadRes('model/role/character_' + this._resID, cc.SpriteFrame, function (err, spriteFrame) {
+        if(err){
+          console.error(err);
+        }
+        else{
+          self.sprite.spriteFrame = spriteFrame;
+        }
+      });
+    }
+  }
 
 
   // LIFE-CYCLE CALLBACKS:
 
-  // onLoad () {}
-
-  start() {
-    // this.ani.play("Role_1_up");
+  onLoad() {
+    cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
   }
 
-  //  update (dt) {
+  start() {
 
-  //  }
+  }
+
+  update(dt) {
+
+  }
+
 
   MyUpdate(dt: any) {
 
-    if (this.target != null) {
+  }
 
-      var x = this.target.node.x - this.node.x;
-      var y = this.target.node.y - this.node.y;
+  SetTarget(target: Role) {
 
-      if (Math.abs(x) > this.minDis) {
-        if (x > 0) {
-          this.RunRight();
+  }
 
-        }
-        else if (x < 0) {
-          this.RunLeft();
-        }
-      }
-      else if (Math.abs(y) > this.minDis) {
-        if (y > 0) {
-          this.RunUp();
+  Jump(dest: cc.Vec2) {
+    if (this.node.getNumberOfRunningActions() == 0) {
 
-        }
-        else if (y < 0) {
-          this.RunDown();
+      var cha = dest.sub(this.node.position);
+      var time = cha.mag() / 500;
 
-        }
-
-      }
+      this.node.runAction(cc.moveTo(time, dest));
+      this.node.runAction(cc.sequence(
+        cc.scaleTo(time / 2.0, 0.75, 0.75),
+        cc.scaleTo(time / 2.0, 0.5, 0.5),
+      ));
     }
 
-
   }
 
-  SetTarget(monster: Monster) {
-    this.target = monster;
-  }
-
-  RunLeft() {
-    if (this.currentDir != Direction.Left) {
-      this.currentDir = Direction.Left;
-      this.node.stopAllActions();
-      var dest: cc.Vec2 = new cc.Vec2(-270, this.node.y);
-      var cha = Math.abs(dest.x - this.node.x);
-      var time = cha / this.speed;
-      var action = cc.moveTo(time, dest);
+  Attack() {
+    if (this.node.getNumberOfRunningActions() == 0) {
+      var action = cc.sequence(
+        cc.rotateTo(0.05, -10),
+        cc.rotateTo(0.1, 10),
+        cc.rotateTo(0.05, 0),
+      );
       this.node.runAction(action);
-      this.ani.play("left");
     }
   }
 
-  RunRight() {
-    if (this.currentDir != Direction.Right) {
-      this.currentDir = Direction.Right;
-      this.node.stopAllActions();
-      var dest: cc.Vec2 = new cc.Vec2(270, this.node.y);
-      var cha = Math.abs(dest.x - this.node.x);
-      var time = cha / this.speed;
-      var action = cc.moveTo(time, dest);
-      this.node.runAction(action);
-      this.ani.play("right");
+  Hurt() {
+    if (this.shaderCom) {
+      this.unschedule(this.Recover);
+      this.shaderCom.shader = ShaderType.Hurt;
+      this.scheduleOnce(this.Recover, 0.1);
     }
-
   }
 
-  RunUp() {
-    if (this.currentDir != Direction.Up) {
-      this.currentDir = Direction.Up;
-      this.node.stopAllActions();
-      var dest: cc.Vec2 = new cc.Vec2(this.node.x, 480);
-      var cha = Math.abs(dest.y - this.node.y);
-      var time = cha / this.speed;
-      var action = cc.moveTo(time, dest);
-      this.node.runAction(action);
-      this.ani.play("up");
-    }
-
+  Recover() {
+    this.shaderCom.shader = ShaderType.Default;
   }
 
-  RunDown() {
-    if (this.currentDir != Direction.Down) {
-      this.currentDir = Direction.Down;
-      this.node.stopAllActions();
-      var dest: cc.Vec2 = new cc.Vec2(this.node.x, -480);
-      var cha = Math.abs(dest.y - this.node.y);
-      var time = cha / this.speed;
-      var action = cc.moveTo(time, dest);
-      this.node.runAction(action);
-      this.ani.play("down");
-    }
 
+  onKeyDown(event) {
+    switch (event.keyCode) {
+      case cc.macro.KEY.w:
+        this.Jump(this.node.position.add(cc.v2(0, 100)));
+        break;
+      case cc.macro.KEY.s:
+        this.Jump(this.node.position.add(cc.v2(0, -100)));
+        break;
+      case cc.macro.KEY.a:
+        this.Jump(this.node.position.add(cc.v2(-100, 0)));
+        break;
+      case cc.macro.KEY.d:
+        this.Jump(this.node.position.add(cc.v2(100, 0)));
+        break;
+      case cc.macro.KEY.f:
+        this.Attack();
+        break;
+      case cc.macro.KEY.g:
+        this.Hurt();
+        break;
+    }
   }
+
 }

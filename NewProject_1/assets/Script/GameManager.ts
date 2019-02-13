@@ -14,58 +14,108 @@ import Role from "./Role";
 const { ccclass, property } = cc._decorator;
 
 @ccclass
-export default class NewClass extends cc.Component {
+export default class GameManager extends cc.Component {
 
-    @property(Monster)
-    pig: Monster;
+    @property(cc.Node)
+    battleField: cc.Node = null;
 
-    @property(Role)
-    role: Role;
+    @property(cc.Prefab)
+    rolePrefab: cc.Prefab = null;
 
-    Nodes: Array<cc.Node> = [];
+    allNodes: Array<cc.Node> = [];
 
-    Monsters: Array<Monster> = [];
+    players: Array<Role> = [];
 
-    Roles: Array<Role> = [];
+    monsters: Array<Role> = [];
 
     // LIFE-CYCLE CALLBACKS:
 
-    // onLoad () {}
+    onLoad() {
+        cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
+    }
 
     start() {
-        this.Nodes.push(this.role.node);
-        this.Nodes.push(this.pig.node);
 
-        this.Roles.push(this.role);
-        this.Monsters.push(this.pig);
-
-        this.role.SetTarget(this.pig);
     }
 
     update(dt) {
 
-        for (var i = 0; i < this.Roles.length; i++) {
-            this.Roles[i].MyUpdate(dt);
+        for (var i = 0; i < this.players.length; i++) {
+            this.players[i].MyUpdate(dt);
         }
 
-        for (var i = 0; i < this.Monsters.length; i++) {
-            this.Monsters[i].MyUpdate(dt);
+        for (var i = 0; i < this.monsters.length; i++) {
+            this.monsters[i].MyUpdate(dt);
         }
     }
 
-    lateUpdate(){
-        this.Nodes = this.Nodes.sort((n1,n2) => {
-            if(n1.y < n2.y) {
+    lateUpdate() {
+        this.allNodes = this.allNodes.sort((n1, n2) => {
+            if (n1.y < n2.y) {
                 return 1;
             }
-            else if(n1.y > n2.y) {
+            else if (n1.y > n2.y) {
                 return -1;
             }
             return 0;
         });
 
-        for (var i = 0; i < this.Nodes.length; i++) {
-            this.Nodes[i].setSiblingIndex(i);
+        for (var i = 0; i < this.allNodes.length; i++) {
+            this.allNodes[i].setSiblingIndex(i);
         }
     }
+
+    onKeyDown(event) {
+        switch (event.keyCode) {
+            case cc.macro.KEY.z:
+                this.BornPlayer(1, cc.v2(0, -300));
+                break;
+            case cc.macro.KEY.x:
+                this.BornMonster(1, cc.v2(0, 300));
+                break;
+        }
+    }
+
+    BornPlayer(resID: number, pos: cc.Vec2) {
+        this.players.push(this.BornRole(resID, pos));
+    }
+
+    RemovePlayer(role: Role) {
+        var index = this.players.indexOf(role);
+        if (index > -1) {
+            this.players.splice(index, 1);
+        }
+
+        this.RemoveRole(role);
+    }
+
+    BornMonster(resID: number, pos: cc.Vec2) {
+        this.monsters.push(this.BornRole(resID, pos));
+    }
+
+    RemoveMonster(role: Role) {
+        var index = this.monsters.indexOf(role);
+        if (index > -1) {
+            this.players.splice(index, 1);
+        }
+
+        this.RemoveRole(role);
+    }
+
+    BornRole(resID: number, pos: cc.Vec2): Role {
+        var role = cc.instantiate(this.rolePrefab).getComponent(Role);
+        role.resID = resID;
+        role.node.setParent(this.battleField);
+        role.node.setPosition(pos);
+        this.allNodes.push(role.node);
+        return role;
+    }
+
+    RemoveRole(role: Role) {
+        var index = this.allNodes.indexOf(role.node);
+        if (index > -1) {
+            this.allNodes.splice(index, 1);
+        }
+    }
+
 }
