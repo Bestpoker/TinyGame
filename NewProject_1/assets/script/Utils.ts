@@ -13,16 +13,18 @@ const { ccclass, property } = cc._decorator;
 @ccclass
 export default class Utils {
 
-    static assetMap: { string: cc.Asset };
-    static assetCountMap: { string: number };
+    static assetMap: { [key:string]: cc.Asset; } = {};
+    static assetCountMap: { [key:string]: number; } = {};
 
     static LoadRes(resName: string, type: typeof cc.Asset, completeCallback: (error: Error, resource: any) => void) {
+        
         if (Utils.assetCountMap[resName] == null) {
             Utils.assetCountMap[resName] = 0;
         }
         Utils.assetCountMap[resName]++;
 
         if (Utils.assetMap[resName] != null) {
+            completeCallback(null, Utils.assetMap[resName]);
             return Utils.assetMap[resName];
         }
 
@@ -51,7 +53,13 @@ export default class Utils {
             Utils.assetMap[resName] = null;
             delete Utils.assetMap[resName];
 
-            cc.loader.release(resName);
+            
+            var deps = cc.loader.getDependsRecursively(resName);
+            if(deps){
+                cc.loader.release(deps);
+            }
+            
+            cc.sys.garbageCollect();
         }
     }
 

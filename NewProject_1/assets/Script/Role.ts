@@ -3,6 +3,7 @@ import ShaderComponent from "./ShaderComponent";
 import { ShaderType } from "./ShaderManager";
 import GameManager from "./GameManager";
 import Utils from "./Utils";
+import RoleRes from "./Res/RoleRes";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -37,16 +38,18 @@ export default class Role extends cc.Component {
 
   attackRange: number = 150;
 
-  resName: string = "";
+  roleRes: RoleRes = null;
 
   _resID: number = 0;
   get resID() { return this._resID; }
   set resID(res) {
     this._resID = res;
     if (this._resID > 0) {
-      this.resName = "model/role/character_" + this._resID;
+
+      this.roleRes = RoleRes.resMap[this.resID];
+
       var self = this;
-      Utils.LoadRes(this.resName, cc.SpriteFrame, function (err, spriteFrame) {
+      Utils.LoadRes(this.roleRes.resUrl, cc.SpriteFrame, function (err, spriteFrame) {
         if (err) {
           console.error(err);
         }
@@ -77,60 +80,90 @@ export default class Role extends cc.Component {
   // }
 
 
-  MyUpdate(dt: any) {
-    var array: Array<Role> = null;
-    if(this.teamType == TeamType.Player){
-      array = GameManager.instance.monsters;
-    }
-    else if(this.teamType == TeamType.Monster){
-      array = GameManager.instance.players;
-    }
+  UpdateRound() {
 
-    var dis: number = 0;
-    for (var i = 0; i < array.length; i++) {
-      dis = array[i].node.position.sub(this.node.position).mag();
-      if(dis == 0){
-
+    if (this.node.getNumberOfRunningActions() == 0) {
+      var array: Array<Role> = null;
+      if (this.teamType == TeamType.Player) {
+        array = GameManager.instance.monsters;
       }
+      else if (this.teamType == TeamType.Monster) {
+        array = GameManager.instance.players;
+      }
+
+      var dis: number = -1;
+      if (array) {
+        for (var i = 0; i < array.length; i++) {
+          var temp = array[i].node.position.sub(this.node.position).mag();
+          if (dis == -1) {
+            dis = temp;
+            this.SetTarget(array[i]);
+          }
+          else {
+            if (temp < dis) {
+              dis = temp;
+              this.SetTarget(array[i]);
+            }
+          }
+        }
+      }
+
     }
+
+
   }
 
+
   SetTarget(target: Role) {
-    this.target = target;
+    if (target) {
+      this.target = target;
+      
+      var dest = this.target.node.position.sub(this.node.position);
+      if(this.node.position == dest){
+        this.Jump(dest);
+      }
+      else{
+        this.Attack();
+      }
+    }
+
   }
 
   Jump(dest: cc.Vec2) {
-    if (this.node.getNumberOfRunningActions() == 0) {
-      this.isJumping = true;
-      var time = dest.sub(this.node.position).mag() / this.jumpSpeed;
 
-      var finished = cc.callFunc(function () {
-        this.isJumping = false;
-      });
-      var myAction = cc.sequence(cc.moveTo(time, dest), finished);
+    this.isJumping = true;
+    var time = dest.sub(this.node.position).mag() / this.jumpSpeed;
 
-      this.node.runAction(myAction);
-      this.node.runAction(cc.sequence(
-        cc.scaleTo(time / 2.0, 0.75, 0.75),
-        cc.scaleTo(time / 2.0, 0.5, 0.5),
-      ));
-    }
+    var self = this;
+    var finished = cc.callFunc(function () {
+      self.isJumping = false;
+      self.Attack();
+    });
+    var myAction = cc.sequence(cc.moveTo(time, dest), finished);
+
+    this.node.runAction(myAction);
+    this.node.runAction(cc.sequence(
+      cc.scaleTo(time / 2.0, 0.75, 0.75),
+      cc.scaleTo(time / 2.0, 0.5, 0.5),
+    ));
+
 
   }
 
   Attack() {
-    if (this.node.getNumberOfRunningActions() == 0) {
-      if (this.target != null) {
-        var action = cc.sequence(
-          cc.rotateTo(0.05, -10),
-          cc.rotateTo(0.1, 10),
-          cc.rotateTo(0.05, 0),
-        );
-        this.node.runAction(action);
-        GameManager.instance.CreateMagic(1, cc.v2(200, 200));
-      }
 
+    if (this.target != null) {
+      var action = cc.sequence(
+        cc.rotateTo(0.05, -10),
+        cc.rotateTo(0.1, 10),
+        cc.rotateTo(0.05, 0),
+      );
+      this.node.runAction(action);
+      GameManager.instance.CreateMagic(1, this.target.node.position);
+      this.target.Hurt();
     }
+
+
   }
 
   Hurt() {
