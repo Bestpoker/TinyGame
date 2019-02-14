@@ -37,10 +37,10 @@ export default class Monster extends cc.Component {
 
     // onLoad () {}
 
-    start () {
+    // start () {
         
-        this.RunLeft();
-    }
+    //     this.RunLeft();
+    // }
 
     // update (dt) {}
 

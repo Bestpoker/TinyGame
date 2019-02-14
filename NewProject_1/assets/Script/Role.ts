@@ -1,6 +1,8 @@
 import Monster, { Direction } from "./Monster";
 import ShaderComponent from "./ShaderComponent";
 import { ShaderType } from "./ShaderManager";
+import GameManager from "./GameManager";
+import Utils from "./Utils";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -14,6 +16,12 @@ import { ShaderType } from "./ShaderManager";
 
 const { ccclass, property } = cc._decorator;
 
+export enum TeamType {
+  Non = 0,
+  Player = 1,
+  Monster = 2,
+}
+
 @ccclass
 export default class Role extends cc.Component {
 
@@ -23,22 +31,35 @@ export default class Role extends cc.Component {
   @property(cc.Sprite)
   sprite: cc.Sprite = null;
 
+  isJumping: boolean = false;
+
+  jumpSpeed: number = 500;
+
+  attackRange: number = 150;
+
+  resName: string = "";
+
   _resID: number = 0;
   get resID() { return this._resID; }
   set resID(res) {
     this._resID = res;
     if (this._resID > 0) {
+      this.resName = "model/role/character_" + this._resID;
       var self = this;
-      cc.loader.loadRes('model/role/character_' + this._resID, cc.SpriteFrame, function (err, spriteFrame) {
-        if(err){
+      Utils.LoadRes(this.resName, cc.SpriteFrame, function (err, spriteFrame) {
+        if (err) {
           console.error(err);
         }
-        else{
+        else {
           self.sprite.spriteFrame = spriteFrame;
         }
       });
     }
   }
+
+  target: Role = null;
+
+  teamType: TeamType = TeamType.Non;
 
 
   // LIFE-CYCLE CALLBACKS:
@@ -47,30 +68,48 @@ export default class Role extends cc.Component {
     cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
   }
 
-  start() {
+  // start() {
 
-  }
+  // }
 
-  update(dt) {
+  // update(dt) {
 
-  }
+  // }
 
 
   MyUpdate(dt: any) {
+    var array: Array<Role> = null;
+    if(this.teamType == TeamType.Player){
+      array = GameManager.instance.monsters;
+    }
+    else if(this.teamType == TeamType.Monster){
+      array = GameManager.instance.players;
+    }
 
+    var dis: number = 0;
+    for (var i = 0; i < array.length; i++) {
+      dis = array[i].node.position.sub(this.node.position).mag();
+      if(dis == 0){
+
+      }
+    }
   }
 
   SetTarget(target: Role) {
-
+    this.target = target;
   }
 
   Jump(dest: cc.Vec2) {
     if (this.node.getNumberOfRunningActions() == 0) {
+      this.isJumping = true;
+      var time = dest.sub(this.node.position).mag() / this.jumpSpeed;
 
-      var cha = dest.sub(this.node.position);
-      var time = cha.mag() / 500;
+      var finished = cc.callFunc(function () {
+        this.isJumping = false;
+      });
+      var myAction = cc.sequence(cc.moveTo(time, dest), finished);
 
-      this.node.runAction(cc.moveTo(time, dest));
+      this.node.runAction(myAction);
       this.node.runAction(cc.sequence(
         cc.scaleTo(time / 2.0, 0.75, 0.75),
         cc.scaleTo(time / 2.0, 0.5, 0.5),
@@ -81,12 +120,16 @@ export default class Role extends cc.Component {
 
   Attack() {
     if (this.node.getNumberOfRunningActions() == 0) {
-      var action = cc.sequence(
-        cc.rotateTo(0.05, -10),
-        cc.rotateTo(0.1, 10),
-        cc.rotateTo(0.05, 0),
-      );
-      this.node.runAction(action);
+      if (this.target != null) {
+        var action = cc.sequence(
+          cc.rotateTo(0.05, -10),
+          cc.rotateTo(0.1, 10),
+          cc.rotateTo(0.05, 0),
+        );
+        this.node.runAction(action);
+        GameManager.instance.CreateMagic(1, cc.v2(200, 200));
+      }
+
     }
   }
 
