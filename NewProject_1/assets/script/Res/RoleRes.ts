@@ -17,10 +17,12 @@ export default class RoleRes {
     resUrl: string = "";
     hp: number = 0;
     attack: number = 0;
+    attackRange: number = 0;
+    attackSpeed: number = 0;
 
     static resMap: { [ID: number]: RoleRes; } = {
-        1: { ID: 1, resUrl: "model/role/character_1", hp: 1000, attack: 200 },
-        2: { ID: 2, resUrl: "model/role/creature_1", hp: 200, attack: 50 },
+        1: { ID: 1, resUrl: "model/role/character_1", hp: 1000, attack: 200, attackRange: 150, attackSpeed: 2 },
+        2: { ID: 2, resUrl: "model/role/creature_1", hp: 200, attack: 50, attackRange: 150, attackSpeed: 2 },
     };
 
 }

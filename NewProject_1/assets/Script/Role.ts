@@ -1,7 +1,7 @@
 import Monster, { Direction } from "./Monster";
 import ShaderComponent from "./ShaderComponent";
 import { ShaderType } from "./ShaderManager";
-import GameManager from "./GameManager";
+import GameManager, { Grid } from "./GameManager";
 import Utils from "./Utils";
 import RoleRes from "./Res/RoleRes";
 
@@ -36,8 +36,6 @@ export default class Role extends cc.Component {
 
   jumpSpeed: number = 500;
 
-  attackRange: number = 150;
-
   roleRes: RoleRes = null;
 
   _resID: number = 0;
@@ -64,6 +62,10 @@ export default class Role extends cc.Component {
 
   teamType: TeamType = TeamType.Non;
 
+  grid: Grid = null;
+
+  lastAttackDate: Date = new Date(-2000);
+
 
   // LIFE-CYCLE CALLBACKS:
 
@@ -79,91 +81,104 @@ export default class Role extends cc.Component {
 
   // }
 
+  UpdateRole(dt) {
 
-  UpdateRound() {
-
-    if (this.node.getNumberOfRunningActions() == 0) {
-      var array: Array<Role> = null;
-      if (this.teamType == TeamType.Player) {
-        array = GameManager.instance.monsters;
+    if (this.target) {
+      var dis = this.target.node.position.sub(this.node.position).mag();
+      if (dis > this.roleRes.attackRange) {
+        this.SeekEnemy();
       }
-      else if (this.teamType == TeamType.Monster) {
-        array = GameManager.instance.players;
-      }
-
-      var dis: number = -1;
-      if (array) {
-        for (var i = 0; i < array.length; i++) {
-          var temp = array[i].node.position.sub(this.node.position).mag();
-          if (dis == -1) {
-            dis = temp;
-            this.SetTarget(array[i]);
-          }
-          else {
-            if (temp < dis) {
-              dis = temp;
-              this.SetTarget(array[i]);
-            }
-          }
-        }
-      }
-
+    }
+    else {
+      this.SeekEnemy();
     }
 
-
-  }
-
-
-  SetTarget(target: Role) {
-    if (target) {
-      this.target = target;
-      
-      var dest = this.target.node.position.sub(this.node.position);
-      if(this.node.position == dest){
-        this.Jump(dest);
+    if (this.target) {
+      var dis = this.target.node.position.sub(this.node.position).mag();
+      if (dis <= this.roleRes.attackRange) {
+        this.Attack();
       }
-      else{
+      else {
+        // this.Jump();
+        //应该寻找合适的格子跳过去
         this.Attack();
       }
     }
 
   }
 
+  SeekEnemy() {
+    var array: Array<Role> = null;
+    if (this.teamType == TeamType.Player) {
+      array = GameManager.instance.monsters;
+    }
+    else if (this.teamType == TeamType.Monster) {
+      array = GameManager.instance.players;
+    }
+
+    var dis: number = -1;
+    if (array) {
+      for (var i = 0; i < array.length; i++) {
+        var temp = array[i].node.position.sub(this.node.position).mag();
+        if (dis == -1) {
+          dis = temp;
+          this.SetTarget(array[i]);
+        }
+        else {
+          if (temp < dis) {
+            dis = temp;
+            this.SetTarget(array[i]);
+          }
+        }
+      }
+    }
+  }
+
+  SetTarget(target: Role) {
+    if (target) {
+      this.target = target;
+    }
+  }
+
   Jump(dest: cc.Vec2) {
+    if (this.node.getNumberOfRunningActions() == 0) {
+      this.isJumping = true;
+      var time = dest.sub(this.node.position).mag() / this.jumpSpeed;
 
-    this.isJumping = true;
-    var time = dest.sub(this.node.position).mag() / this.jumpSpeed;
+      var self = this;
+      var finished = cc.callFunc(function () {
+        self.isJumping = false;
+      });
 
-    var self = this;
-    var finished = cc.callFunc(function () {
-      self.isJumping = false;
-      self.Attack();
-    });
-    var myAction = cc.sequence(cc.moveTo(time, dest), finished);
+      var myAction = cc.sequence(cc.moveTo(time, dest), finished);
 
-    this.node.runAction(myAction);
-    this.node.runAction(cc.sequence(
-      cc.scaleTo(time / 2.0, 0.75, 0.75),
-      cc.scaleTo(time / 2.0, 0.5, 0.5),
-    ));
-
+      this.node.runAction(myAction);
+      this.node.runAction(cc.sequence(
+        cc.scaleTo(time / 2.0, 0.75, 0.75),
+        cc.scaleTo(time / 2.0, 0.5, 0.5),
+      ));
+    }
 
   }
 
   Attack() {
-
-    if (this.target != null) {
-      var action = cc.sequence(
-        cc.rotateTo(0.05, -10),
-        cc.rotateTo(0.1, 10),
-        cc.rotateTo(0.05, 0),
-      );
-      this.node.runAction(action);
-      GameManager.instance.CreateMagic(1, this.target.node.position);
-      this.target.Hurt();
+    
+    if(Date.now() - this.lastAttackDate.getTime() > this.roleRes.attackSpeed * 1000){
+      if (this.node.getNumberOfRunningActions() == 0) {
+        if (this.target != null) {
+          var action = cc.sequence(
+            cc.rotateTo(0.05, -10),
+            cc.rotateTo(0.1, 10),
+            cc.rotateTo(0.05, 0),
+          );
+          this.node.runAction(action);
+          GameManager.instance.CreateMagic(1, this.target.node.position);
+          this.target.Hurt();
+          this.lastAttackDate = new Date();
+        }
+      }
     }
-
-
+    
   }
 
   Hurt() {

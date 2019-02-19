@@ -14,14 +14,14 @@ const { ccclass, property } = cc._decorator;
 export default class Utils {
 
     static assetMap: { [key:string]: cc.Asset; } = {};
-    static assetCountMap: { [key:string]: number; } = {};
+    // static assetCountMap: { [key:string]: number; } = {};
 
     static LoadRes(resName: string, type: typeof cc.Asset, completeCallback: (error: Error, resource: any) => void) {
         
-        if (Utils.assetCountMap[resName] == null) {
-            Utils.assetCountMap[resName] = 0;
-        }
-        Utils.assetCountMap[resName]++;
+        // if (Utils.assetCountMap[resName] == null) {
+        //     Utils.assetCountMap[resName] = 0;
+        // }
+        // Utils.assetCountMap[resName]++;
 
         if (Utils.assetMap[resName] != null) {
             completeCallback(null, Utils.assetMap[resName]);
@@ -33,34 +33,34 @@ export default class Utils {
                 console.error(err);
             }
             else {
-                if(Utils.assetCountMap[resName] > 0){
+                // if(Utils.assetCountMap[resName] > 0){
                     Utils.assetMap[resName] = asset;
                     completeCallback(err, asset);
-                }
-                else{
-                    cc.loader.release(resName);
-                }
+                // }
+                // else{
+                //     cc.loader.release(resName);
+                // }
             }
         });
     }
 
-    static RemoveRes(resName: string) {
-        Utils.assetCountMap[resName]--;
-        if (Utils.assetCountMap[resName] <= 0) {
-            Utils.assetCountMap[resName] = 0;
-            delete Utils.assetCountMap[resName];
+    // static RemoveRes(resName: string) {
+    //     Utils.assetCountMap[resName]--;
+    //     if (Utils.assetCountMap[resName] <= 0) {
+    //         Utils.assetCountMap[resName] = 0;
+    //         delete Utils.assetCountMap[resName];
 
-            Utils.assetMap[resName] = null;
-            delete Utils.assetMap[resName];
+    //         Utils.assetMap[resName] = null;
+    //         delete Utils.assetMap[resName];
 
             
-            var deps = cc.loader.getDependsRecursively(resName);
-            if(deps){
-                cc.loader.release(deps);
-            }
+    //         var deps = cc.loader.getDependsRecursively(resName);
+    //         if(deps){
+    //             cc.loader.release(deps);
+    //         }
             
-            cc.sys.garbageCollect();
-        }
-    }
+    //         cc.sys.garbageCollect();
+    //     }
+    // }
 
 }

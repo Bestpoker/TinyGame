@@ -38,7 +38,6 @@ export default class Magic extends cc.Component {
                     self.animation.play(clip1.name);
                     self.scheduleOnce(function () { 
                         GameManager.instance.RemoveMagic(self);
-                        GameManager.instance.EndRound();
                      }, clip1.duration * clip1.speed);
                 }
             });
