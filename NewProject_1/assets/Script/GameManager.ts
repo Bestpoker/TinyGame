@@ -17,8 +17,6 @@ const { ccclass, property } = cc._decorator;
 
 export class Grid {
 
-    ID: number = 0;
-
     postion: cc.Vec2 = cc.Vec2.ZERO;
 
     role: Role = null;
@@ -39,7 +37,8 @@ export default class GameManager extends cc.Component {
     }
 
     start() {
-
+        this.InitGird();
+        this.StartGame();
     }
 
     update(dt) {
@@ -192,8 +191,8 @@ export default class GameManager extends cc.Component {
         this.currentTime = this.maxTime;
         this.currentTurn = TeamType.Player;
         this.timeLabel.string = this.currentTime.toString();
-        this.CreatePlayer(1, cc.v2(0, -300));
-        this.CreateMonster(2, cc.v2(0, 300));
+        this.CreatePlayer(1, cc.v2(200, 0));
+        this.CreateMonster(2, cc.v2(200, 500));
     }
 
     UpdateGame(dt) {
@@ -213,12 +212,12 @@ export default class GameManager extends cc.Component {
             this.totalUpdateTime += <number>dt;
 
             if (this.totalUpdateTime >= 1) {
-                this.totalUpdateTime = 0;
                 this.currentTime -= this.totalUpdateTime;
                 if (this.currentTime <= 0) {
                     this.currentTime = 0;
                 }
-                this.timeLabel.string = this.currentTime.toString();
+                this.timeLabel.string = this.currentTime.toFixed(0).toString();
+                this.totalUpdateTime = 0;
             }
 
         }
@@ -246,26 +245,36 @@ export default class GameManager extends cc.Component {
             this.RemoveMonster(this.monsters[i]);
         }
 
+        this.scheduleOnce(function(){this.StartGame()}, 5);
+
     }
 
     //#endregion
 
     //#region  grid
 
+    gridMaxX: number = 5;
+
+    gridMaxY: number = 6;
+
     gridMap: { [key: string]: Grid; } = {};
+
+    InitGird(){
+        for (var i = 0; i <= this.gridMaxX; i++) {
+            for (var j = 0; j <= this.gridMaxY; j++) {
+                var key = cc.v2(i * 100, j * 100);
+                var grid = new Grid();
+                grid.postion = key;
+                this.gridMap[key.toString()] = grid;
+            }
+        }
+    }
 
     EnterGrid(role: Role, dest: cc.Vec2) {
         this.OutGrid(role);
-        var gird = this.gridMap[dest.toString()];
-        if (gird) {
-            console.info("11");
-            if(!gird.role){
-                this.gridMap[dest.toString()].role = role;
-                role.grid = gird;
-            }
-        }
-        else{
-            console.info("22");
+        if (this.CanEnterGrid(dest)) {
+            this.gridMap[dest.toString()].role = role;
+            role.grid = this.gridMap[dest.toString()];
         }
     }
 
@@ -274,6 +283,19 @@ export default class GameManager extends cc.Component {
             this.gridMap[role.grid.postion.toString()].role = null;
             role.grid = null;
         }
+    }
+
+    CanEnterGrid(key: cc.Vec2): boolean {
+        var gird = this.gridMap[key.toString()];
+        if (gird) {
+            if (gird.role) {
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+        return false;
     }
 
     //#endregion

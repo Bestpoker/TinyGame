@@ -32,9 +32,13 @@ export default class Role extends cc.Component {
   @property(cc.Sprite)
   sprite: cc.Sprite = null;
 
-  isJumping: boolean = false;
+  isJumping = false;
 
-  jumpSpeed: number = 500;
+  lastJumpTime = 0;
+
+  jumpCooldown = 0.5;
+
+  jumpSpeed = 500;
 
   roleRes: RoleRes = null;
 
@@ -64,7 +68,7 @@ export default class Role extends cc.Component {
 
   grid: Grid = null;
 
-  lastAttackDate: Date = new Date(-2000);
+  lastAttackTime = 0;
 
 
   // LIFE-CYCLE CALLBACKS:
@@ -83,27 +87,48 @@ export default class Role extends cc.Component {
 
   UpdateRole(dt) {
 
-    if (this.target) {
-      var dis = this.target.node.position.sub(this.node.position).mag();
-      if (dis > this.roleRes.attackRange) {
-        this.SeekEnemy();
-      }
-    }
-    else {
-      this.SeekEnemy();
-    }
-
-    if (this.target) {
-      var dis = this.target.node.position.sub(this.node.position).mag();
-      if (dis <= this.roleRes.attackRange) {
-        this.Attack();
+    if (this.node.getNumberOfRunningActions() == 0) {
+      if (this.target) {
+        var selfDis = this.target.node.position.sub(this.node.position).mag();
+        if (selfDis > this.roleRes.attackRange) {
+          this.SeekEnemy();
+        }
       }
       else {
-        // this.Jump();
-        //应该寻找合适的格子跳过去
-        this.Attack();
+        this.SeekEnemy();
+      }
+
+      if (this.target) {
+        var selfDis = this.target.node.position.sub(this.node.position).mag();
+        if (selfDis <= this.roleRes.attackRange) {
+          this.Attack();
+        }
+        else {
+          //应该寻找合适的格子跳过去
+          var min = -1;
+          var dest: cc.Vec2;
+          for (let key in GameManager.instance.gridMap) {
+            var grid = GameManager.instance.gridMap[key];
+            if (grid.role == null && grid.role != this) {
+              var selfDis = grid.postion.sub(this.node.position).mag();
+              var taregetDis = grid.postion.sub(this.target.node.position).mag();
+              if (selfDis <= this.roleRes.moveRange) {
+                if (min == -1 || taregetDis < min) {
+                  min = taregetDis;
+                  dest = grid.postion;
+                }
+              }
+            }
+          }
+
+          if (min != -1) {
+            this.Jump(dest);
+          }
+
+        }
       }
     }
+
 
   }
 
@@ -119,16 +144,13 @@ export default class Role extends cc.Component {
     var dis: number = -1;
     if (array) {
       for (var i = 0; i < array.length; i++) {
+        if (array[i].isJumping) {
+          continue;
+        }
         var temp = array[i].node.position.sub(this.node.position).mag();
-        if (dis == -1) {
+        if (dis == -1 || temp < dis) {
           dis = temp;
           this.SetTarget(array[i]);
-        }
-        else {
-          if (temp < dis) {
-            dis = temp;
-            this.SetTarget(array[i]);
-          }
         }
       }
     }
@@ -141,7 +163,8 @@ export default class Role extends cc.Component {
   }
 
   Jump(dest: cc.Vec2) {
-    if (this.node.getNumberOfRunningActions() == 0) {
+    var now = Date.now();
+    if (now - this.lastJumpTime > this.jumpCooldown * 1000 &&  this.node.getNumberOfRunningActions() == 0) {
       this.isJumping = true;
       var time = dest.sub(this.node.position).mag() / this.jumpSpeed;
 
@@ -157,15 +180,17 @@ export default class Role extends cc.Component {
         cc.scaleTo(time / 2.0, 0.75, 0.75),
         cc.scaleTo(time / 2.0, 0.5, 0.5),
       ));
+
+      this.lastJumpTime = now;
     }
 
   }
 
   Attack() {
-    
-    if(Date.now() - this.lastAttackDate.getTime() > this.roleRes.attackSpeed * 1000){
+    var now = Date.now();
+    if (now - this.lastAttackTime > this.roleRes.attackSpeed * 1000) {
       if (this.node.getNumberOfRunningActions() == 0) {
-        if (this.target != null) {
+        if (this.target != null && !this.target.isJumping) {
           var action = cc.sequence(
             cc.rotateTo(0.05, -10),
             cc.rotateTo(0.1, 10),
@@ -174,11 +199,11 @@ export default class Role extends cc.Component {
           this.node.runAction(action);
           GameManager.instance.CreateMagic(1, this.target.node.position);
           this.target.Hurt();
-          this.lastAttackDate = new Date();
+          this.lastAttackTime = now;
         }
       }
     }
-    
+
   }
 
   Hurt() {

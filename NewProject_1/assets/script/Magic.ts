@@ -30,11 +30,12 @@ export default class Magic extends cc.Component {
             var self = this;
             Utils.LoadRes(this.resName, cc.AnimationClip, function (err, clip) {
                 if (err) {
-                    console.error(err);
+                    console.error("加载magic错误" + err);
                 }
                 else {
                     var clip1 = <cc.AnimationClip>clip;
                     self.animation.addClip(clip1);
+                    self.animation.defaultClip = clip1;
                     self.animation.play(clip1.name);
                     self.scheduleOnce(function () { 
                         GameManager.instance.RemoveMagic(self);

@@ -30,7 +30,7 @@ export default class Utils {
 
         cc.loader.loadRes(resName, type, function (err, asset) {
             if (err) {
-                console.error(err);
+                console.error("加载资源错误 " + err);
             }
             else {
                 // if(Utils.assetCountMap[resName] > 0){
