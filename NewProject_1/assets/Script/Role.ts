@@ -1,4 +1,3 @@
-import Monster, { Direction } from "./Monster";
 import ShaderComponent from "./ShaderComponent";
 import { ShaderType } from "./ShaderManager";
 import GameManager, { Grid } from "./GameManager";
@@ -40,7 +39,7 @@ export default class Role extends cc.Component {
 
   jumpSpeed = 500;
 
-  roleRes: RoleRes = null;
+  res: RoleRes = null;
 
   _resID: number = 0;
   get resID() { return this._resID; }
@@ -48,15 +47,15 @@ export default class Role extends cc.Component {
     this._resID = res;
     if (this._resID > 0) {
 
-      this.roleRes = RoleRes.resMap[this.resID];
+      this.res = RoleRes.resMap[this.resID];
 
       var self = this;
-      Utils.LoadRes(this.roleRes.resUrl, cc.SpriteFrame, function (err, spriteFrame) {
+      Utils.LoadRes(this.res.resUrl, cc.SpriteFrame, function (err, res) {
         if (err) {
           console.error(err);
         }
         else {
-          self.sprite.spriteFrame = spriteFrame;
+          self.sprite.spriteFrame = res;
         }
       });
     }
@@ -90,7 +89,7 @@ export default class Role extends cc.Component {
     if (this.node.getNumberOfRunningActions() == 0) {
       if (this.target) {
         var selfDis = this.target.node.position.sub(this.node.position).mag();
-        if (selfDis > this.roleRes.attackRange) {
+        if (selfDis > this.res.attackRange) {
           this.SeekEnemy();
         }
       }
@@ -100,7 +99,7 @@ export default class Role extends cc.Component {
 
       if (this.target) {
         var selfDis = this.target.node.position.sub(this.node.position).mag();
-        if (selfDis <= this.roleRes.attackRange) {
+        if (selfDis <= this.res.attackRange) {
           this.Attack();
         }
         else {
@@ -112,7 +111,7 @@ export default class Role extends cc.Component {
             if (grid.role == null && grid.role != this) {
               var selfDis = grid.postion.sub(this.node.position).mag();
               var taregetDis = grid.postion.sub(this.target.node.position).mag();
-              if (selfDis <= this.roleRes.moveRange) {
+              if (selfDis <= this.res.moveRange) {
                 if (min == -1 || taregetDis < min) {
                   min = taregetDis;
                   dest = grid.postion;
@@ -177,8 +176,8 @@ export default class Role extends cc.Component {
 
       this.node.runAction(myAction);
       this.node.runAction(cc.sequence(
-        cc.scaleTo(time / 2.0, 0.75, 0.75),
-        cc.scaleTo(time / 2.0, 0.5, 0.5),
+        cc.scaleTo(time / 2.0, 1.5, 1.5),
+        cc.scaleTo(time / 2.0, 1, 1),
       ));
 
       this.lastJumpTime = now;
@@ -188,7 +187,7 @@ export default class Role extends cc.Component {
 
   Attack() {
     var now = Date.now();
-    if (now - this.lastAttackTime > this.roleRes.attackSpeed * 1000) {
+    if (now - this.lastAttackTime > this.res.attackSpeed * 1000) {
       if (this.node.getNumberOfRunningActions() == 0) {
         if (this.target != null && !this.target.isJumping) {
           var action = cc.sequence(

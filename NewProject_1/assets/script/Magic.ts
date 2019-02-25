@@ -1,5 +1,6 @@
 import GameManager from "./GameManager";
 import Utils from "./Utils";
+import MagicRes from "./Res/MagicRes";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -19,29 +20,39 @@ export default class Magic extends cc.Component {
     @property(cc.Animation)
     animation: cc.Animation = null;
 
-    resName: string = "";
+    @property(cc.Sprite)
+    sprite: cc.Sprite = null;
+
+    res: MagicRes = null;
+
+
+    atlas: cc.SpriteAtlas;
 
     _resID: number = 0;
     get resID() { return this._resID; }
     set resID(res) {
         this._resID = res;
         if (this._resID > 0) {
-            this.resName = "animation/magic/magic_" + this._resID;
+
+            this.res = MagicRes.resMap[this.resID];
+
             var self = this;
-            Utils.LoadRes(this.resName, cc.AnimationClip, function (err, clip) {
+
+            Utils.LoadRes(this.res.resUrl, cc.AnimationClip, function (err, res) {
                 if (err) {
-                    console.error("加载magic错误" + err);
+                    console.error(err);
                 }
                 else {
-                    var clip1 = <cc.AnimationClip>clip;
-                    self.animation.addClip(clip1);
-                    self.animation.defaultClip = clip1;
-                    self.animation.play(clip1.name);
+                    var clip = <cc.AnimationClip>res;
+                    self.animation.addClip(clip);
+                    self.animation.play(clip.name);
                     self.scheduleOnce(function () { 
                         GameManager.instance.RemoveMagic(self);
-                     }, clip1.duration * clip1.speed);
+                     }, clip.duration * clip.speed);
                 }
             });
+
+
         }
     }
 

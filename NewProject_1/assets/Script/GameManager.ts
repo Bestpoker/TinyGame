@@ -1,4 +1,3 @@
-import Monster from "./Monster";
 import Role, { TeamType } from "./Role";
 import Magic from "./Magic";
 import Utils from "./Utils";
@@ -245,7 +244,7 @@ export default class GameManager extends cc.Component {
             this.RemoveMonster(this.monsters[i]);
         }
 
-        this.scheduleOnce(function(){this.StartGame()}, 5);
+        this.scheduleOnce(function () { this.StartGame() }, 5);
 
     }
 
@@ -259,7 +258,7 @@ export default class GameManager extends cc.Component {
 
     gridMap: { [key: string]: Grid; } = {};
 
-    InitGird(){
+    InitGird() {
         for (var i = 0; i <= this.gridMaxX; i++) {
             for (var j = 0; j <= this.gridMaxY; j++) {
                 var key = cc.v2(i * 100, j * 100);
@@ -299,5 +298,7 @@ export default class GameManager extends cc.Component {
     }
 
     //#endregion
+
+   
 
 }
