@@ -1,6 +1,6 @@
-import GameManager from "./GameManager";
-import Utils from "./Utils";
-import MagicRes from "./Res/MagicRes";
+import GameManager from "./../GameManager";
+import Utils from "./../utils/Utils";
+import MagicRes from "./../Res/MagicRes";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html

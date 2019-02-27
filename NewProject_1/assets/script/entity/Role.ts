@@ -1,8 +1,8 @@
-import ShaderComponent from "./ShaderComponent";
-import { ShaderType } from "./ShaderManager";
-import GameManager, { Grid } from "./GameManager";
-import Utils from "./Utils";
-import RoleRes from "./Res/RoleRes";
+import ShaderComponent from "../shader/ShaderComponent";
+import { ShaderType } from "../shader/ShaderManager";
+import GameManager, { Grid } from "../GameManager";
+import Utils from "../utils/Utils";
+import RoleRes from "../Res/RoleRes";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -31,7 +31,7 @@ export default class Role extends cc.Component {
   @property(cc.Sprite)
   sprite: cc.Sprite = null;
 
-  isJumping = false;
+  unAttackable = false;
 
   lastJumpTime = 0;
 
@@ -58,6 +58,10 @@ export default class Role extends cc.Component {
           self.sprite.spriteFrame = res;
         }
       });
+
+      this.currentHp = this.res.hp;
+
+
     }
   }
 
@@ -69,11 +73,15 @@ export default class Role extends cc.Component {
 
   lastAttackTime = 0;
 
+  currentHp: number;
+
+  currentMp = 0;
+
 
   // LIFE-CYCLE CALLBACKS:
 
   onLoad() {
-    cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
+    // cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
   }
 
   // start() {
@@ -85,10 +93,10 @@ export default class Role extends cc.Component {
   // }
 
   UpdateRole(dt) {
-
+    
     if (this.node.getNumberOfRunningActions() == 0) {
       if (this.target) {
-        var selfDis = this.target.node.position.sub(this.node.position).mag();
+        var selfDis = this.target.grid.position.sub(this.grid.position).mag();
         if (selfDis > this.res.attackRange) {
           this.SeekEnemy();
         }
@@ -98,31 +106,37 @@ export default class Role extends cc.Component {
       }
 
       if (this.target) {
-        var selfDis = this.target.node.position.sub(this.node.position).mag();
+        var selfDis = this.target.grid.position.sub(this.grid.position).mag();
         if (selfDis <= this.res.attackRange) {
           this.Attack();
         }
         else {
-          //应该寻找合适的格子跳过去
-          var min = -1;
-          var dest: cc.Vec2;
-          for (let key in GameManager.instance.gridMap) {
-            var grid = GameManager.instance.gridMap[key];
-            if (grid.role == null && grid.role != this) {
-              var selfDis = grid.postion.sub(this.node.position).mag();
-              var taregetDis = grid.postion.sub(this.target.node.position).mag();
-              if (selfDis <= this.res.moveRange) {
-                if (min == -1 || taregetDis < min) {
-                  min = taregetDis;
-                  dest = grid.postion;
+
+          var now = Date.now();
+          if (now - this.lastJumpTime > this.jumpCooldown * 1000 && this.node.getNumberOfRunningActions() == 0) {
+            //应该寻找合适的格子跳过去
+            var min = -1;
+            var dest: cc.Vec2;
+            for (let key in GameManager.instance.gridMap) {
+              var grid = GameManager.instance.gridMap[key];
+              if (GameManager.instance.CanEnterGrid(grid.position)) {
+                var selfDis = grid.position.sub(this.grid.position).mag();
+                var taregetDis = grid.position.sub(this.target.grid.position).mag();
+                if (selfDis <= this.res.moveRange) {
+                  if (min == -1 || taregetDis < min) {
+                    min = taregetDis;
+                    dest = grid.position;
+                  }
                 }
               }
             }
+
+            if (min != -1) {
+              this.Jump(dest);
+            }
           }
 
-          if (min != -1) {
-            this.Jump(dest);
-          }
+
 
         }
       }
@@ -143,10 +157,10 @@ export default class Role extends cc.Component {
     var dis: number = -1;
     if (array) {
       for (var i = 0; i < array.length; i++) {
-        if (array[i].isJumping) {
-          continue;
-        }
-        var temp = array[i].node.position.sub(this.node.position).mag();
+        // if (array[i].unAttackable) {
+        //   continue;
+        // }
+        var temp = array[i].grid.position.sub(this.grid.position).mag();
         if (dis == -1 || temp < dis) {
           dis = temp;
           this.SetTarget(array[i]);
@@ -162,26 +176,25 @@ export default class Role extends cc.Component {
   }
 
   Jump(dest: cc.Vec2) {
-    var now = Date.now();
-    if (now - this.lastJumpTime > this.jumpCooldown * 1000 &&  this.node.getNumberOfRunningActions() == 0) {
-      this.isJumping = true;
-      var time = dest.sub(this.node.position).mag() / this.jumpSpeed;
 
-      var self = this;
-      var finished = cc.callFunc(function () {
-        self.isJumping = false;
-      });
+    this.unAttackable = true;
+    var time = dest.sub(this.grid.position).mag() / this.jumpSpeed;
 
-      var myAction = cc.sequence(cc.moveTo(time, dest), finished);
+    var self = this;
+    var finished = cc.callFunc(function () {
+      self.lastJumpTime = Date.now();
+      self.unAttackable = false;
+    });
 
-      this.node.runAction(myAction);
-      this.node.runAction(cc.sequence(
-        cc.scaleTo(time / 2.0, 1.5, 1.5),
-        cc.scaleTo(time / 2.0, 1, 1),
-      ));
+    var myAction = cc.sequence(cc.moveTo(time, dest), finished);
 
-      this.lastJumpTime = now;
-    }
+    this.node.runAction(myAction);
+    this.node.runAction(cc.sequence(
+      cc.scaleTo(time / 2.0, 1.5, 1.5),
+      cc.scaleTo(time / 2.0, 1, 1),
+    ));
+
+    GameManager.instance.EnterGrid(this, dest);
 
   }
 
@@ -189,7 +202,7 @@ export default class Role extends cc.Component {
     var now = Date.now();
     if (now - this.lastAttackTime > this.res.attackSpeed * 1000) {
       if (this.node.getNumberOfRunningActions() == 0) {
-        if (this.target != null && !this.target.isJumping) {
+        if (this.target != null && !this.target.unAttackable) {
           var action = cc.sequence(
             cc.rotateTo(0.05, -10),
             cc.rotateTo(0.1, 10),
@@ -197,7 +210,7 @@ export default class Role extends cc.Component {
           );
           this.node.runAction(action);
           GameManager.instance.CreateMagic(1, this.target.node.position);
-          this.target.Hurt();
+          this.target.Hurt(this.res.attack);
           this.lastAttackTime = now;
         }
       }
@@ -205,12 +218,31 @@ export default class Role extends cc.Component {
 
   }
 
-  Hurt() {
+  Hurt(hp: number) {
+
+    this.currentHp -= hp;
+
+    GameManager.instance.CreateHud(hp, this.node.position);
+
     if (this.shaderCom) {
       this.unschedule(this.Recover);
       this.shaderCom.shader = ShaderType.Hurt;
       this.scheduleOnce(this.Recover, 0.1);
     }
+
+    if (this.currentHp <= 0) {
+      this.unAttackable = true;
+
+      var self = this;
+      var finished = cc.callFunc(function () {
+        GameManager.instance.RealRemoveRole(self);
+      });
+
+      var moveAction = cc.sequence(cc.fadeOut(0.5), finished);
+
+      this.node.runAction(moveAction);
+    }
+
   }
 
   Recover() {
@@ -218,27 +250,6 @@ export default class Role extends cc.Component {
   }
 
 
-  onKeyDown(event) {
-    switch (event.keyCode) {
-      case cc.macro.KEY.w:
-        this.Jump(this.node.position.add(cc.v2(0, 100)));
-        break;
-      case cc.macro.KEY.s:
-        this.Jump(this.node.position.add(cc.v2(0, -100)));
-        break;
-      case cc.macro.KEY.a:
-        this.Jump(this.node.position.add(cc.v2(-100, 0)));
-        break;
-      case cc.macro.KEY.d:
-        this.Jump(this.node.position.add(cc.v2(100, 0)));
-        break;
-      case cc.macro.KEY.f:
-        this.Attack();
-        break;
-      case cc.macro.KEY.g:
-        this.Hurt();
-        break;
-    }
-  }
+
 
 }

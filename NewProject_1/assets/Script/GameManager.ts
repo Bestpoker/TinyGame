@@ -1,6 +1,6 @@
-import Role, { TeamType } from "./Role";
-import Magic from "./Magic";
-import Utils from "./Utils";
+import Role, { TeamType } from "./entity/Role";
+import Magic from "./entity/Magic";
+import Utils from "./utils/Utils";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -16,7 +16,7 @@ const { ccclass, property } = cc._decorator;
 
 export class Grid {
 
-    postion: cc.Vec2 = cc.Vec2.ZERO;
+    position: cc.Vec2 = cc.Vec2.ZERO;
 
     role: Role = null;
 
@@ -150,13 +150,31 @@ export default class GameManager extends cc.Component {
 
     magics: Array<Magic> = [];
 
-    CreatePlayer(resID: number, pos: cc.Vec2) {
+    RealCreateRole(resID: number, pos: cc.Vec2, team: TeamType){
+        if(team == TeamType.Player){
+            this.CreatePlayer(resID, pos);
+        }
+        else if(team == TeamType.Monster){
+            this.CreateMonster(resID, pos);
+        }
+    }
+
+    RealRemoveRole(role: Role){
+        if(role.teamType == TeamType.Player){
+            this.RemovePlayer(role);
+        }
+        else if(role.teamType == TeamType.Monster){
+            this.RemoveMonster(role);
+        }
+    }
+
+    private CreatePlayer(resID: number, pos: cc.Vec2) {
         var role = this.CreateRole(resID, pos);
         role.teamType = TeamType.Player;
         this.players.push(role);
     }
 
-    RemovePlayer(role: Role) {
+    private RemovePlayer(role: Role) {
         var index = this.players.indexOf(role);
         if (index > -1) {
             this.players.splice(index, 1);
@@ -165,13 +183,13 @@ export default class GameManager extends cc.Component {
         this.RemoveRole(role);
     }
 
-    CreateMonster(resID: number, pos: cc.Vec2) {
+    private CreateMonster(resID: number, pos: cc.Vec2) {
         var role = this.CreateRole(resID, pos);
         role.teamType = TeamType.Monster;
         this.monsters.push(role);
     }
 
-    RemoveMonster(role: Role) {
+    private RemoveMonster(role: Role) {
         var index = this.monsters.indexOf(role);
         if (index > -1) {
             this.monsters.splice(index, 1);
@@ -180,7 +198,12 @@ export default class GameManager extends cc.Component {
         this.RemoveRole(role);
     }
 
-    CreateRole(resID: number, pos: cc.Vec2): Role {
+    private CreateRole(resID: number, pos: cc.Vec2): Role {
+
+        if(!this.CanEnterGrid(pos)){
+            return;
+        }
+
         var role = cc.instantiate(this.rolePrefab).getComponent(Role);
         role.resID = resID;
         role.node.setParent(this.battleField);
@@ -190,12 +213,13 @@ export default class GameManager extends cc.Component {
         return role;
     }
 
-    RemoveRole(role: Role) {
+    private RemoveRole(role: Role) {
         var index = this.allNodes.indexOf(role.node);
         if (index > -1) {
             this.allNodes.splice(index, 1);
         }
         role.node.destroy();
+        this.OutGrid(role);
         // Utils.RemoveRes(role.roleRes.resUrl);
 
     }
@@ -245,12 +269,31 @@ export default class GameManager extends cc.Component {
     timeLabel: cc.Label = null;
 
     StartGame() {
-        this.isGaming = true;
+
+        for (var i = this.players.length - 1; i >= 0; i--) {
+            this.RemovePlayer(this.players[i]);
+        }
+
+        for (var i = this.monsters.length - 1; i >= 0; i--) {
+            this.RemoveMonster(this.monsters[i]);
+        }
+
         this.currentTime = this.maxTime;
         this.currentTurn = TeamType.Player;
         this.timeLabel.string = this.currentTime.toString();
-        this.CreatePlayer(1, cc.v2(200, 0));
-        this.CreateMonster(2, cc.v2(200, 500));
+
+        this.RealCreateRole(1, cc.v2(200, 0), TeamType.Player);
+        this.RealCreateRole(1, cc.v2(400, 0), TeamType.Player);
+        this.RealCreateRole(2, cc.v2(0, 500), TeamType.Monster);
+
+        var self = this;
+        this.scheduleOnce(function () { self.RealStartGame() }, 1);
+    }
+
+    RealStartGame(){
+        
+        this.isGaming = true;
+        
     }
 
     UpdateGame(dt) {
@@ -286,24 +329,20 @@ export default class GameManager extends cc.Component {
         this.isGaming = false;
 
         if (this.currentTime >= this.maxTime) {
+            this.timeLabel.string = "WIN";
             console.log("player win");
         }
         else if (this.monsters.length == 0) {
+            this.timeLabel.string = "WIN";
             console.log("player win");
         }
         else if (this.players.length == 0) {
+            this.timeLabel.string = "LOSE";
             console.log("player lose");
         }
 
-        for (var i = this.players.length - 1; i >= 0; i--) {
-            this.RemovePlayer(this.players[i]);
-        }
-
-        for (var i = this.monsters.length - 1; i >= 0; i--) {
-            this.RemoveMonster(this.monsters[i]);
-        }
-
-        this.scheduleOnce(function () { this.StartGame() }, 5);
+        var self = this;
+        this.scheduleOnce(function () { self.StartGame() }, 2);
 
     }
 
@@ -322,15 +361,15 @@ export default class GameManager extends cc.Component {
             for (var j = 0; j <= this.gridMaxY; j++) {
                 var key = cc.v2(i * 100, j * 100);
                 var grid = new Grid();
-                grid.postion = key;
+                grid.position = key;
                 this.gridMap[key.toString()] = grid;
             }
         }
     }
 
     EnterGrid(role: Role, dest: cc.Vec2) {
-        this.OutGrid(role);
         if (this.CanEnterGrid(dest)) {
+            this.OutGrid(role);
             this.gridMap[dest.toString()].role = role;
             role.grid = this.gridMap[dest.toString()];
         }
@@ -338,15 +377,15 @@ export default class GameManager extends cc.Component {
 
     OutGrid(role: Role) {
         if (role.grid) {
-            this.gridMap[role.grid.postion.toString()].role = null;
+            this.gridMap[role.grid.position.toString()].role = null;
             role.grid = null;
         }
     }
 
     CanEnterGrid(key: cc.Vec2): boolean {
-        var gird = this.gridMap[key.toString()];
-        if (gird) {
-            if (gird.role) {
+        var grid = this.gridMap[key.toString()];
+        if (grid) {
+            if (grid.role) {
                 return false;
             }
             else {
@@ -354,6 +393,35 @@ export default class GameManager extends cc.Component {
             }
         }
         return false;
+    }
+
+    //#endregion
+
+    //#region  hudui
+
+    @property(cc.Prefab)
+    hudPrefab: cc.Prefab = null;
+
+    @property(cc.Node)
+    hudUI: cc.Node = null;
+
+    CreateHud(hp: number, pos: cc.Vec2) {
+        var hud = cc.instantiate(this.hudPrefab);
+        hud.setParent(this.hudUI);
+        hud.setPosition(pos.add(cc.v2(0, 50)));
+
+        hud.getComponent(cc.Label).string = "-" + hp;
+
+        var finished = cc.callFunc(function () {
+            hud.destroy();
+        });
+
+        var moveAction = cc.sequence(cc.moveTo(0.5, pos.add(cc.v2(0, 100))), finished);
+        var fadeAction = cc.fadeOut(0.5);
+
+        hud.runAction(moveAction);
+        hud.runAction(fadeAction);
+
     }
 
     //#endregion
