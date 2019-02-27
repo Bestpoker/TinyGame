@@ -36,61 +36,61 @@ export default class GameManager extends cc.Component {
     onLoad() {
         GameManager.instance = this;
         // cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
-        if (CC_WECHATGAME) {
-            const wx = window["wx"];
-            wx.cloud.init();
-            // 1. 获取数据库引用
-            const db = wx.cloud.database();
+        // if (CC_WECHATGAME) {
+        //     const wx = window["wx"];
+        //     wx.cloud.init();
+        //     // 1. 获取数据库引用
+        //     const db = wx.cloud.database();
 
-            db.collection('player').add({
-                // data 字段表示需新增的 JSON 数据
-                data: {
-                    _id: 'test', // 可选自定义 _id，在此处场景下用数据库自动分配的就可以了
-                    tip: 'learn cloud database'
-                },
-                success(res) {
-                    // res 是一个对象，其中有 _id 字段标记刚创建的记录的 id
-                    console.log("创建成功res: " + res);
-                    console.log("创建成功res: " + res["tip"]);
-                    console.log("创建成功res.data: " + res.data);
-                    console.log("创建成功res.data: " + res.data["tip"]);
-                }
-            })
+        //     db.collection('player').add({
+        //         // data 字段表示需新增的 JSON 数据
+        //         data: {
+        //             _id: 'test', // 可选自定义 _id，在此处场景下用数据库自动分配的就可以了
+        //             tip: 'learn cloud database'
+        //         },
+        //         success(res) {
+        //             // res 是一个对象，其中有 _id 字段标记刚创建的记录的 id
+        //             console.log("创建成功res: " + res);
+        //             console.log("创建成功res: " + res["tip"]);
+        //             console.log("创建成功res.data: " + res.data);
+        //             console.log("创建成功res.data: " + res.data["tip"]);
+        //         }
+        //     })
 
-            // db.collection('player').add({
-            //     // data 字段表示需新增的 JSON 数据
-            //     data: {
-            //         // _id: 'user_1',
-            //         _openid: 'openID_1' // 假设用户的 openid 为 user-open-id
-            //     },
-            //     success(res) {
-            //         // res 是一个对象，其中有 _id 字段标记刚创建的记录的 id
-            //         console.log("创建成功res: " + res);
-            //         console.log("创建成功res.data: " + res.data);
-            //     }
-            // });
+        //     // db.collection('player').add({
+        //     //     // data 字段表示需新增的 JSON 数据
+        //     //     data: {
+        //     //         // _id: 'user_1',
+        //     //         _openid: 'openID_1' // 假设用户的 openid 为 user-open-id
+        //     //     },
+        //     //     success(res) {
+        //     //         // res 是一个对象，其中有 _id 字段标记刚创建的记录的 id
+        //     //         console.log("创建成功res: " + res);
+        //     //         console.log("创建成功res.data: " + res.data);
+        //     //     }
+        //     // });
 
-            db.collection("player").doc("test").get({
-                success(res) {
-                    // res.data 包含该记录的数据
-                    console.log("读取成功");
-                    console.log("读取成功res.data: " + res.data["tip"]);
-                    GameManager.instance.tipLabel.string = res.data["tip"];
-                }
-            });
+        //     db.collection("player").doc("test").get({
+        //         success(res) {
+        //             // res.data 包含该记录的数据
+        //             console.log("读取成功");
+        //             console.log("读取成功res.data: " + res.data["tip"]);
+        //             GameManager.instance.tipLabel.string = res.data["tip"];
+        //         }
+        //     });
 
-            db.collection("player").doc("test1").get({
-                success(res) {
-                    // res.data 包含该记录的数据
-                    console.log("读取成功");
-                    console.log("读取成功res.data: " + res.data["tip"]);
-                    GameManager.instance.tipLabel.string = res.data["tip"];
-                }
-            });
+        //     db.collection("player").doc("test1").get({
+        //         success(res) {
+        //             // res.data 包含该记录的数据
+        //             console.log("读取成功");
+        //             console.log("读取成功res.data: " + res.data["tip"]);
+        //             GameManager.instance.tipLabel.string = res.data["tip"];
+        //         }
+        //     });
 
-            console.log("onload success");
+        //     console.log("onload success");
 
-        }
+        // }
     }
 
     start() {
@@ -150,28 +150,31 @@ export default class GameManager extends cc.Component {
 
     magics: Array<Magic> = [];
 
-    RealCreateRole(resID: number, pos: cc.Vec2, team: TeamType){
-        if(team == TeamType.Player){
+    RealCreateRole(resID: number, pos: cc.Vec2, team: TeamType) {
+        if (team == TeamType.Player) {
             this.CreatePlayer(resID, pos);
         }
-        else if(team == TeamType.Monster){
+        else if (team == TeamType.Monster) {
             this.CreateMonster(resID, pos);
         }
     }
 
-    RealRemoveRole(role: Role){
-        if(role.teamType == TeamType.Player){
+    RealRemoveRole(role: Role) {
+        if (role.teamType == TeamType.Player) {
             this.RemovePlayer(role);
         }
-        else if(role.teamType == TeamType.Monster){
+        else if (role.teamType == TeamType.Monster) {
             this.RemoveMonster(role);
         }
     }
 
     private CreatePlayer(resID: number, pos: cc.Vec2) {
         var role = this.CreateRole(resID, pos);
-        role.teamType = TeamType.Player;
-        this.players.push(role);
+        if (role) {
+            role.teamType = TeamType.Player;
+            this.players.push(role);
+        }
+
     }
 
     private RemovePlayer(role: Role) {
@@ -185,8 +188,11 @@ export default class GameManager extends cc.Component {
 
     private CreateMonster(resID: number, pos: cc.Vec2) {
         var role = this.CreateRole(resID, pos);
-        role.teamType = TeamType.Monster;
-        this.monsters.push(role);
+        if (role) {
+            role.teamType = TeamType.Monster;
+            this.monsters.push(role);
+        }
+
     }
 
     private RemoveMonster(role: Role) {
@@ -200,8 +206,8 @@ export default class GameManager extends cc.Component {
 
     private CreateRole(resID: number, pos: cc.Vec2): Role {
 
-        if(!this.CanEnterGrid(pos)){
-            return;
+        if (!this.CanEnterGrid(pos)) {
+            return null;
         }
 
         var role = cc.instantiate(this.rolePrefab).getComponent(Role);
@@ -218,8 +224,9 @@ export default class GameManager extends cc.Component {
         if (index > -1) {
             this.allNodes.splice(index, 1);
         }
-        role.node.destroy();
         this.OutGrid(role);
+        role.node.destroy();
+        role = null;
         // Utils.RemoveRes(role.roleRes.resUrl);
 
     }
@@ -282,18 +289,24 @@ export default class GameManager extends cc.Component {
         this.currentTurn = TeamType.Player;
         this.timeLabel.string = this.currentTime.toString();
 
+        for (let index = 0; index < 10; index++) {
+            var ranX = Utils.GetRandomInt(0, 4) * 100;
+            var ranY = Utils.GetRandomInt(3, 5) * 100;
+            this.RealCreateRole(2, cc.v2(ranX, ranY), TeamType.Monster);
+        }
+
         this.RealCreateRole(1, cc.v2(200, 0), TeamType.Player);
         this.RealCreateRole(1, cc.v2(400, 0), TeamType.Player);
-        this.RealCreateRole(2, cc.v2(0, 500), TeamType.Monster);
+
 
         var self = this;
         this.scheduleOnce(function () { self.RealStartGame() }, 1);
     }
 
-    RealStartGame(){
-        
+    RealStartGame() {
+
         this.isGaming = true;
-        
+
     }
 
     UpdateGame(dt) {
@@ -357,8 +370,8 @@ export default class GameManager extends cc.Component {
     gridMap: { [key: string]: Grid; } = {};
 
     InitGird() {
-        for (var i = 0; i <= this.gridMaxX; i++) {
-            for (var j = 0; j <= this.gridMaxY; j++) {
+        for (var i = 0; i < this.gridMaxX; i++) {
+            for (var j = 0; j < this.gridMaxY; j++) {
                 var key = cc.v2(i * 100, j * 100);
                 var grid = new Grid();
                 grid.position = key;

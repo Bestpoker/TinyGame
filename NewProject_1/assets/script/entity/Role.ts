@@ -95,7 +95,7 @@ export default class Role extends cc.Component {
   UpdateRole(dt) {
     
     if (this.node.getNumberOfRunningActions() == 0) {
-      if (this.target) {
+      if (this.target && this.target.isValid) {
         var selfDis = this.target.grid.position.sub(this.grid.position).mag();
         if (selfDis > this.res.attackRange) {
           this.SeekEnemy();
@@ -105,7 +105,7 @@ export default class Role extends cc.Component {
         this.SeekEnemy();
       }
 
-      if (this.target) {
+      if (this.target && this.target.isValid) {
         var selfDis = this.target.grid.position.sub(this.grid.position).mag();
         if (selfDis <= this.res.attackRange) {
           this.Attack();
@@ -170,7 +170,7 @@ export default class Role extends cc.Component {
   }
 
   SetTarget(target: Role) {
-    if (target) {
+    if (target && target.isValid) {
       this.target = target;
     }
   }
