@@ -1,6 +1,7 @@
 import Role, { TeamType } from "./entity/Role";
 import Magic from "./entity/Magic";
 import Utils from "./utils/Utils";
+import DbHelper from "./utils/DbHelper";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -36,61 +37,10 @@ export default class GameManager extends cc.Component {
     onLoad() {
         GameManager.instance = this;
         // cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
-        // if (CC_WECHATGAME) {
-        //     const wx = window["wx"];
-        //     wx.cloud.init();
-        //     // 1. 获取数据库引用
-        //     const db = wx.cloud.database();
 
-        //     db.collection('player').add({
-        //         // data 字段表示需新增的 JSON 数据
-        //         data: {
-        //             _id: 'test', // 可选自定义 _id，在此处场景下用数据库自动分配的就可以了
-        //             tip: 'learn cloud database'
-        //         },
-        //         success(res) {
-        //             // res 是一个对象，其中有 _id 字段标记刚创建的记录的 id
-        //             console.log("创建成功res: " + res);
-        //             console.log("创建成功res: " + res["tip"]);
-        //             console.log("创建成功res.data: " + res.data);
-        //             console.log("创建成功res.data: " + res.data["tip"]);
-        //         }
-        //     })
+        DbHelper.Init();
 
-        //     // db.collection('player').add({
-        //     //     // data 字段表示需新增的 JSON 数据
-        //     //     data: {
-        //     //         // _id: 'user_1',
-        //     //         _openid: 'openID_1' // 假设用户的 openid 为 user-open-id
-        //     //     },
-        //     //     success(res) {
-        //     //         // res 是一个对象，其中有 _id 字段标记刚创建的记录的 id
-        //     //         console.log("创建成功res: " + res);
-        //     //         console.log("创建成功res.data: " + res.data);
-        //     //     }
-        //     // });
-
-        //     db.collection("player").doc("test").get({
-        //         success(res) {
-        //             // res.data 包含该记录的数据
-        //             console.log("读取成功");
-        //             console.log("读取成功res.data: " + res.data["tip"]);
-        //             GameManager.instance.tipLabel.string = res.data["tip"];
-        //         }
-        //     });
-
-        //     db.collection("player").doc("test1").get({
-        //         success(res) {
-        //             // res.data 包含该记录的数据
-        //             console.log("读取成功");
-        //             console.log("读取成功res.data: " + res.data["tip"]);
-        //             GameManager.instance.tipLabel.string = res.data["tip"];
-        //         }
-        //     });
-
-        //     console.log("onload success");
-
-        // }
+        
     }
 
     start() {
@@ -101,7 +51,6 @@ export default class GameManager extends cc.Component {
 
     update(dt) {
         this.UpdateGame(dt);
-
     }
 
     lateUpdate() {
