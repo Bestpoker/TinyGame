@@ -2,6 +2,7 @@ import Role, { TeamType } from "./entity/Role";
 import Magic from "./entity/Magic";
 import Utils from "./utils/Utils";
 import DbHelper from "./utils/DbHelper";
+import { DbPlayer } from "./data/DbData";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -31,22 +32,39 @@ export default class GameManager extends cc.Component {
     @property(cc.Label)
     tipLabel: cc.Label = null;
 
+    isInited: boolean = false;
+
     //#region callback
     // LIFE-CYCLE CALLBACKS:
 
     onLoad() {
         GameManager.instance = this;
-        // cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
 
-        DbHelper.Init();
+        if(CC_WECHATGAME){
+            var self = this;
+            DbHelper.Init(function(result){
 
-        
+                if(result){
+                    console.log("初始化成功");
+                    self.isInited = true;
+                    self.start();
+                }
+                else{
+                    console.log("初始化失败");
+                    self.isInited = false;
+                }
+            });
+        }
+        else{
+            this.isInited = true;
+        }
     }
 
     start() {
-        this.InitGird();
-        this.StartGame();
-
+        if(this.isInited){
+            this.InitGird();
+            this.StartGame();
+        }
     }
 
     update(dt) {

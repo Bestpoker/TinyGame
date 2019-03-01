@@ -1,3 +1,6 @@
+import { DbPlayer } from "../data/DbData";
+import { GameData } from "../data/GameData";
+
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
 //  - [English] http://www.cocos2d-x.org/docs/creator/manual/en/scripting/typescript.html
@@ -13,129 +16,85 @@ const { ccclass, property } = cc._decorator;
 @ccclass
 export default class DbHelper {
 
-    static Init() {
+    static db;
+
+    static Init(callback: Function) {
         if (CC_WECHATGAME) {
             const wx = window["wx"];
             wx.cloud.init();
             // 1. 获取数据库引用
-            const db = wx.cloud.database();
+            DbHelper.db = wx.cloud.database();
 
-            // db.collection('player').get({
-            //     success(res) {
-            //         console.log("有记录 " + res.data['_id']);
-            //     },
-            //     fail(res) {
-            //         console.log("无记录 " + res.data['_id']);
-            //     }
-            // })
-
-            // db.collection('player').count({
-            //     success(res) {
-            //         console.log("记录条数 " + res.total);
-            //     }
-            // })
-
-            // db.collection('player').set('GameLevel')({
-            //     // data 字段表示需新增的 JSON 数据
-            //     data: {
-            //         level: '1',
-            //     },
-            //     success(res) {
-            //         // res 是一个对象，其中有 _id 字段标记刚创建的记录的 id
-            //         console.log("创建成功 " + res.data['_id']);
-            //     },
-            //     fail(res){
-            //         console.log("创建失败 " + res.data['_id']);
-            //     }
-            // })
-
-            // db.collection('player').add({
-            //     // data 字段表示需新增的 JSON 数据
-            //     data: {
-            //          _id: 'GameLevel',
-            //     },
-            //     success(res) {
-            //         // res 是一个对象，其中有 _id 字段标记刚创建的记录的 id
-            //         console.log("创建成功res: " + res);
-            //         console.log("创建成功res.data: " + res.data);
-            //     }
-            // });
-
-            db.collection('player').where({
-                _id: 'GameLevel' // 填入当前用户 openid
+            DbHelper.db.collection('user').where({
+                _id: 'player' // 填入当前用户 openid
             }).get({
                 success(res) {
-                    console.log("有记录")
+                    console.log("查询成功")
                     console.log(res.data)
+
+
+                    if (res.data.length == 0) {
+
+                        DbHelper.db.collection('user').add({
+                            // data 字段表示需新增的 JSON 数据
+                            data: {
+                                _id: 'player',
+                                roleName: '无名氏',
+                            },
+                            success(res) {
+                                console.log("创建player成功");
+                                console.log(res);
+
+                                DbHelper.db.collection('user').get({
+                                    success(res) {
+                                        console.log("查询player成功")
+                                        console.log(res.data);
+
+                                        var player = res.data[0] as DbPlayer;
+                                        GameData.instance.playerData = res.data[0] as DbPlayer;
+
+                                        callback(true);
+                                    },
+                                    fail() {
+                                        console.log("查询player失败")
+                                        callback(false);
+                                    }
+                                });
+
+                            },
+                            fail() {
+                                console.log("创建player失败")
+                                callback(false);
+                            }
+                        });
+
+                    }
+                    else {
+                        console.log(res.data[0])
+
+                        GameData.instance.playerData = res.data[0] as DbPlayer;
+
+                        callback(true);
+                        
+                    }
                 },
                 fail() {
-                    console.log("无记录")
-                },
-                complete() {
-                    console.log("查询完毕")
+                    console.log("查询失败")
+                    callback(false);
                 }
             })
-
-            // db.collection('player').where({
-            //     _openid: 'oH5wo40nN8pN5aNLGOKjxnNjHkiU' // 填入当前用户 openid
-            // }).get({
-            //     success(res) {
-            //         console.log(res.data);
-            //     }
-            // })
-
-
+            console.log("异步");
         }
     }
 
-    static DbSetGameLevel() {
+    static SetGameLevel() {
         if (CC_WECHATGAME) {
 
-            // DbHelper.db.collection('player').set('GameLevel')({
-            //     // data 字段表示需新增的 JSON 数据
-            //     data: {
-            //         level: '1',
-            //     },
-            //     success(res) {
-            //         // res 是一个对象，其中有 _id 字段标记刚创建的记录的 id
-            //         console.log("创建成功");
-            //     }
-            // })
 
-            // db.collection('player').add({
-            //     // data 字段表示需新增的 JSON 数据
-            //     data: {
-            //         // _id: 'user_1',
-            //         _openid: 'openID_1' // 假设用户的 openid 为 user-open-id
-            //     },
-            //     success(res) {
-            //         // res 是一个对象，其中有 _id 字段标记刚创建的记录的 id
-            //         console.log("创建成功res: " + res);
-            //         console.log("创建成功res.data: " + res.data);
-            //     }
-            // });
-
-            // db.collection("player").doc("test").get({
-            //     success(res) {
-            //         // res.data 包含该记录的数据
-            //         console.log("读取成功");
-            //         console.log("读取成功res.data: " + res.data["tip"]);
-            //         GameManager.instance.tipLabel.string = res.data["tip"];
-            //     }
-            // });
-
-            // db.collection("player").doc("test1").get({
-            //     success(res) {
-            //         // res.data 包含该记录的数据
-            //         console.log("读取成功");
-            //         console.log("读取成功res.data: " + res.data["tip"]);
-            //         GameManager.instance.tipLabel.string = res.data["tip"];
-            //     }
-            // });
-
-            // console.log("onload success");
 
         }
     }
+
+
 
 }
