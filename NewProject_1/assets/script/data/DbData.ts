@@ -1,12 +1,14 @@
 export class DbPlayer{
 
-    _id: string;
+    _id: string = "";
 
-    _openid: string;
+    _openid: string = "";
     
-    roleID: number;
+    roleID: number = 0;
 
-    roleName: string;
+    roleName: string = "";
 
-    gameLevel: number;
+    gameLevel: number = 1;
+
+    gold: number = 0;
 }

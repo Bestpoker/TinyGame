@@ -1,20 +1,7 @@
 import { DbPlayer } from "../data/DbData";
 import { GameData } from "../data/GameData";
 
-// Learn TypeScript:
-//  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
-//  - [English] http://www.cocos2d-x.org/docs/creator/manual/en/scripting/typescript.html
-// Learn Attribute:
-//  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/reference/attributes.html
-//  - [English] http://www.cocos2d-x.org/docs/creator/manual/en/scripting/reference/attributes.html
-// Learn life-cycle callbacks:
-//  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/life-cycle-callbacks.html
-//  - [English] http://www.cocos2d-x.org/docs/creator/manual/en/scripting/life-cycle-callbacks.html
-
-const { ccclass, property } = cc._decorator;
-
-@ccclass
-export default class DbHelper {
+export class DbHelper {
 
     static db;
 
@@ -38,8 +25,7 @@ export default class DbHelper {
                         DbHelper.db.collection('user').add({
                             // data 字段表示需新增的 JSON 数据
                             data: {
-                                _id: 'player',
-                                roleName: '无名氏',
+                                _id: 'player'
                             },
                             success(res) {
                                 console.log("创建player成功");
@@ -51,7 +37,18 @@ export default class DbHelper {
                                         console.log(res.data);
 
                                         var player = res.data[0] as DbPlayer;
-                                        GameData.instance.playerData = res.data[0] as DbPlayer;
+                                        // GameData.instance.playerData = res.data[0] as DbPlayer;
+
+                                        var data = res.data[0] as DbPlayer;
+
+                                        for (const key of Object.keys(GameData.instance.playerData)) {
+                                            if (data.hasOwnProperty(key)) {
+                                                if (data.valueOf() != null && data.valueOf() != undefined) {
+                                                    GameData.instance.playerData[key] = data[key];
+                                                }
+                                            }
+                
+                                        }
 
                                         callback(true);
                                     },
@@ -72,10 +69,21 @@ export default class DbHelper {
                     else {
                         console.log(res.data[0])
 
-                        GameData.instance.playerData = res.data[0] as DbPlayer;
+                        // GameData.instance.playerData = res.data[0] as DbPlayer;
+
+                        var data = res.data[0] as DbPlayer;
+
+                        for (const key of Object.keys(GameData.instance.playerData)) {
+                            if (data.hasOwnProperty(key)) {
+                                if (data.valueOf() != null && data.valueOf() != undefined) {
+                                    GameData.instance.playerData[key] = data[key];
+                                }
+                            }
+
+                        }
 
                         callback(true);
-                        
+
                     }
                 },
                 fail() {
@@ -87,9 +95,73 @@ export default class DbHelper {
         }
     }
 
+    static SetPlayerData(){
+        if (CC_WECHATGAME) {
+            DbHelper.db.collection('user').doc('player').set({
+                data: {
+                    gameLevel: GameData.instance.playerData.gameLevel,
+                    gold: GameData.instance.playerData.gold
+                },
+                success(res) {
+                    if (res.stats.updated == 1 || res.stats.created == 1) {
+                        console.log("设置人物属性成功");
+                    }
+                    else {
+                        console.log("设置人物属性失败");
+                    }
+                },
+                fail() {
+                    console.log("设置人物属性失败 fail");
+                }
+            })
+
+
+        }
+    }
+
     static SetGameLevel() {
         if (CC_WECHATGAME) {
+            DbHelper.db.collection('user').doc('player').update({
+                data: {
+                    gameLevel: GameData.instance.playerData.gameLevel
+                },
+                success(res) {
+                    if (res.stats.updated == 1) {
+                        console.log("更新等级成功" + GameData.instance.playerData.gameLevel);
+                    }
+                    else {
+                        console.log("更新等级失败");
+                        DbHelper.SetPlayerData();
+                    }
+                },
+                fail() {
+                    console.log("更新等级失败 fail");
+                }
+            })
 
+
+        }
+    }
+
+    static SetGold() {
+        if (CC_WECHATGAME) {
+            DbHelper.db.collection('user').doc('player').update({
+                data: {
+                    gold: GameData.instance.playerData.gold
+                },
+                success(res) {
+                    if (res.stats.updated == 1) {
+                        console.log("更新金币成功 " + GameData.instance.playerData.gold);
+                    }
+                    else {
+                        console.log("更新金币失败");
+                        DbHelper.SetPlayerData();
+                    }
+                },
+                fail() {
+                    console.log("更新金币失败 fail");
+                }
+            })
 
 
         }

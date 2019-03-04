@@ -4,6 +4,6 @@ export class GameData{
 
     static instance: GameData = new GameData();
     
-    dbData: DbPlayer;
+    playerData: DbPlayer = new DbPlayer();
 
 }

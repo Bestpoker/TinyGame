@@ -1,8 +1,8 @@
 import ShaderComponent from "../shader/ShaderComponent";
 import { ShaderType } from "../shader/ShaderManager";
-import GameManager, { Grid } from "../GameManager";
+import GameManager, { Grid } from "../game/GameManager";
 import Utils from "../utils/Utils";
-import RoleRes from "../Res/RoleRes";
+import RoleRes from "../data/RoleData";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -59,7 +59,7 @@ export default class Role extends cc.Component {
         }
       });
 
-      this.currentHp = this.res.hp;
+      this.currentHp = this.res.maxHp;
 
 
     }

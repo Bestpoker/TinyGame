@@ -11,19 +11,15 @@
 const { ccclass, property } = cc._decorator;
 
 @ccclass
-export default class RoleRes {
+export default class MagicData {
 
     ID: number = 0;
     resUrl: string = "";
-    hp: number = 0;
     attack: number = 0;
     attackRange: number = 0;
-    attackSpeed: number = 0;
-    moveRange: number = 0;
 
-    static resMap: { [ID: number]: RoleRes; } = {
-        1: { ID: 1, resUrl: "model/role/character_1", hp: 400, attack: 200, attackRange: 150, attackSpeed: 2, moveRange: 150 },
-        2: { ID: 2, resUrl: "model/role/creature_1", hp: 200, attack: 50, attackRange: 100, attackSpeed: 2, moveRange: 100 },
+    static resMap: { [ID: number]: MagicData; } = {
+        1: { ID: 1, resUrl: "animation/magic/magic_1", attack: 200, attackRange: 150},
     };
 
 }

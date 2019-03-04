@@ -1,8 +1,10 @@
-import Role, { TeamType } from "./entity/Role";
-import Magic from "./entity/Magic";
-import Utils from "./utils/Utils";
-import DbHelper from "./utils/DbHelper";
-import { DbPlayer } from "./data/DbData";
+import Role, { TeamType } from "../entity/Role";
+import Magic from "../entity/Magic";
+import Utils from "../utils/Utils";
+import { DbPlayer } from "../data/DbData";
+import { GameData } from "../data/GameData";
+import { DbHelper } from "../utils/DbHelper";
+import RoleData from "../data/RoleData";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -39,29 +41,37 @@ export default class GameManager extends cc.Component {
 
     onLoad() {
         GameManager.instance = this;
+        // console.log();
 
-        if(CC_WECHATGAME){
+        if (CC_WECHATGAME) {
             var self = this;
-            DbHelper.Init(function(result){
+            DbHelper.Init(function (result) {
 
-                if(result){
+                if (result) {
                     console.log("初始化成功");
                     self.isInited = true;
+
+                    console.log(GameData.instance.playerData._openid + "关卡" + GameData.instance.playerData.gameLevel);
+                    console.log(GameData.instance.playerData._openid + "金币" + GameData.instance.playerData.gold);
                     self.start();
                 }
-                else{
+                else {
                     console.log("初始化失败");
                     self.isInited = false;
                 }
             });
         }
-        else{
+        else {
             this.isInited = true;
         }
     }
 
     start() {
-        if(this.isInited){
+        if (this.isInited) {
+
+            this.gameLevelLabel.string = GameData.instance.playerData.gameLevel.toString();
+            this.goldLabel.string = GameData.instance.playerData.gold.toString();
+
             this.InitGird();
             this.StartGame();
         }
@@ -242,6 +252,12 @@ export default class GameManager extends cc.Component {
     @property(cc.Label)
     timeLabel: cc.Label = null;
 
+    @property(cc.Label)
+    gameLevelLabel: cc.Label = null;
+
+    @property(cc.Label)
+    goldLabel: cc.Label = null;
+
     StartGame() {
 
         for (var i = this.players.length - 1; i >= 0; i--) {
@@ -264,6 +280,10 @@ export default class GameManager extends cc.Component {
 
         this.RealCreateRole(1, cc.v2(200, 0), TeamType.Player);
         this.RealCreateRole(1, cc.v2(400, 0), TeamType.Player);
+
+        for (var i = this.monsters.length - 1; i >= 0; i--) {
+            this.monsters[i].currentHp += this.monsters[i].res.maxHp *  0.2 * (GameData.instance.playerData.gameLevel - 1);
+        }
 
 
         var self = this;
@@ -309,21 +329,44 @@ export default class GameManager extends cc.Component {
         this.isGaming = false;
 
         if (this.currentTime >= this.maxTime) {
-            this.timeLabel.string = "WIN";
-            console.log("player win");
+            this.WinGame();
         }
         else if (this.monsters.length == 0) {
-            this.timeLabel.string = "WIN";
-            console.log("player win");
+            this.WinGame();
         }
         else if (this.players.length == 0) {
-            this.timeLabel.string = "LOSE";
-            console.log("player lose");
+            this.LoseGame();
         }
 
         var self = this;
         this.scheduleOnce(function () { self.StartGame() }, 2);
 
+    }
+
+    WinGame() {
+        this.timeLabel.string = "WIN";
+        console.log("player win");
+
+        GameData.instance.playerData.gameLevel += 1;
+        GameData.instance.playerData.gold += GameData.instance.playerData.gameLevel * 10;
+
+        this.gameLevelLabel.string = GameData.instance.playerData.gameLevel.toString();
+        this.goldLabel.string = GameData.instance.playerData.gold.toString();
+
+        DbHelper.SetGameLevel();
+        DbHelper.SetGold();
+    }
+
+    LoseGame() {
+        this.timeLabel.string = "LOSE";
+
+        GameData.instance.playerData.gold += GameData.instance.playerData.gameLevel * 3;
+
+        this.goldLabel.string = GameData.instance.playerData.gold.toString();
+
+        DbHelper.SetGold();
+
+        console.log("player lose");
     }
 
     //#endregion

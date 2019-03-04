@@ -1,6 +1,6 @@
-import GameManager from "./../GameManager";
+import GameManager from "../game/GameManager";
 import Utils from "./../utils/Utils";
-import MagicRes from "./../Res/MagicRes";
+import MagicData from "../data/MagicData";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -23,7 +23,7 @@ export default class Magic extends cc.Component {
     @property(cc.Sprite)
     sprite: cc.Sprite = null;
 
-    res: MagicRes = null;
+    res: MagicData = null;
 
 
     atlas: cc.SpriteAtlas;
@@ -34,7 +34,7 @@ export default class Magic extends cc.Component {
         this._resID = res;
         if (this._resID > 0) {
 
-            this.res = MagicRes.resMap[this.resID];
+            this.res = MagicData.resMap[this.resID];
 
             var self = this;
 
