@@ -12,16 +12,15 @@ namespace JsonExporter
 {
     public class TypeScriptExporter
     {
-        public static void Export(string path)
+        public static void Export(string inputPath, string exportPath)
         {
-            DirectoryInfo dir = new DirectoryInfo(path);
+            DirectoryInfo dir = new DirectoryInfo(inputPath);
             if (!dir.Exists)
             {
                 Console.WriteLine("导出失败，未找到路径");
                 return;
             }
-
-            string exportPath = path + "/TypeScipt";
+            
             if (!Directory.Exists(exportPath))
             {
                 Directory.CreateDirectory(exportPath);
@@ -77,22 +76,36 @@ namespace JsonExporter
                                 }
                                 else
                                 {
-                                    for (int l = 0; l < row.Cells.Count; l++)
+                                    for (int l = 0; l < proName.Count; l++)
                                     {
-                                        if (proType[l] == "string")
+                                        var cell = row.GetCell(l);
+                                        if (cell != null)
                                         {
-                                            proValue.Add($"\"{row.Cells[l].ToString()}\"");
+                                            if (proType[l] == "string")
+                                            {
+                                                proValue.Add($"\"{cell.ToString()}\"");
+                                            }
+                                            else
+                                            {
+                                                proValue.Add(cell.ToString());
+                                            }
                                         }
                                         else
                                         {
-                                            proValue.Add(row.Cells[l].ToString());
+                                            if (proType[l] == "string")
+                                            {
+                                                proValue.Add($"\"\"");
+                                            }
+                                            else if (proType[l] == "number")
+                                            {
+                                                proValue.Add($"0");
+                                            }
                                         }
-                                        
                                     }
                                 }
                             }
 
-                            using (StreamWriter sw = new StreamWriter(exportPath + "/" + files[i].Name.Replace(extensionName, ".ts")))
+                            using (StreamWriter sw = new StreamWriter(exportPath + "/" + files[i].Name.Replace(extensionName, ".ts"), false))
                             {
                                 string fileName = files[i].Name.Replace(extensionName, "");
                                 sw.WriteLine($"export class {fileName} {{");
@@ -103,7 +116,7 @@ namespace JsonExporter
                                 }
                                 sw.WriteLine();
 
-                                sw.WriteLine($" static {fileName}Map: {{ [{proName[0]}: {proType[0]}]: {fileName}; }} = {{");
+                                sw.WriteLine($" static resMap: {{ [{proName[0]}: {proType[0]}]: {fileName}; }} = {{");
 
                                 for (int k = 0; k < sheet.PhysicalNumberOfRows - 2; k++)
                                 {
@@ -121,6 +134,8 @@ namespace JsonExporter
 
                                 sw.WriteLine();
                                 sw.WriteLine("}");
+                                
+                                sw.Flush();
                             }
 
                         }

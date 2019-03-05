@@ -1,30 +1,17 @@
-// Learn TypeScript:
-//  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
-//  - [English] http://www.cocos2d-x.org/docs/creator/manual/en/scripting/typescript.html
-// Learn Attribute:
-//  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/reference/attributes.html
-//  - [English] http://www.cocos2d-x.org/docs/creator/manual/en/scripting/reference/attributes.html
-// Learn life-cycle callbacks:
-//  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/life-cycle-callbacks.html
-//  - [English] http://www.cocos2d-x.org/docs/creator/manual/en/scripting/life-cycle-callbacks.html
+export class MagicData {
 
-const { ccclass, property } = cc._decorator;
+  ID: number;
+  resUrl: string;
+  attack: number;
+  attackRange: number;
 
-@ccclass
-export default class MagicData {
-
-    ID: number = 0;
-    resUrl: string = "";
-    attack: number = 0;
-    attackRange: number = 0;
-
-    static resMap: { [ID: number]: MagicData; } = {
-        1: { 
-		ID: 1, 
-		resUrl: "animation/magic/magic_1", 
-		attack: 200, 
-		attackRange: 150,
-		},
-    };
+ static resMap: { [ID: number]: MagicData; } = {
+     1: { 
+         ID: 1,
+         resUrl: "animation/magic/magic_1",
+         attack: 200,
+         attackRange: 150,
+     },
+  };
 
 }

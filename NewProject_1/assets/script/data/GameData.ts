@@ -1,9 +1,9 @@
-import { DbPlayer } from "./DbData";
+import { DbPlayerData } from "./DbPlayerData";
 
 export class GameData{
 
     static instance: GameData = new GameData();
     
-    playerData: DbPlayer = new DbPlayer();
+    playerData: DbPlayerData = new DbPlayerData();
 
 }

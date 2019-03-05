@@ -1,4 +1,4 @@
-import { DbPlayer } from "../data/DbData";
+import { DbPlayerData } from "../data/DbPlayerData";
 import { GameData } from "../data/GameData";
 
 export class DbHelper {
@@ -36,10 +36,10 @@ export class DbHelper {
                                         console.log("查询player成功")
                                         console.log(res.data);
 
-                                        var player = res.data[0] as DbPlayer;
+                                        var player = res.data[0] as DbPlayerData;
                                         // GameData.instance.playerData = res.data[0] as DbPlayer;
 
-                                        var data = res.data[0] as DbPlayer;
+                                        var data = res.data[0] as DbPlayerData;
 
                                         for (const key of Object.keys(GameData.instance.playerData)) {
                                             if (data.hasOwnProperty(key)) {
@@ -71,7 +71,7 @@ export class DbHelper {
 
                         // GameData.instance.playerData = res.data[0] as DbPlayer;
 
-                        var data = res.data[0] as DbPlayer;
+                        var data = res.data[0] as DbPlayerData;
 
                         for (const key of Object.keys(GameData.instance.playerData)) {
                             if (data.hasOwnProperty(key)) {

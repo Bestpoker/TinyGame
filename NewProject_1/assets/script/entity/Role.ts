@@ -2,7 +2,7 @@ import ShaderComponent from "../shader/ShaderComponent";
 import { ShaderType } from "../shader/ShaderManager";
 import GameManager, { Grid } from "../game/GameManager";
 import Utils from "../utils/Utils";
-import RoleRes from "../data/RoleData";
+import { RoleData } from "../data/RoleData";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -39,7 +39,7 @@ export default class Role extends cc.Component {
 
   jumpSpeed = 500;
 
-  res: RoleRes = null;
+  res: RoleData = null;
 
   _resID: number = 0;
   get resID() { return this._resID; }
@@ -47,7 +47,7 @@ export default class Role extends cc.Component {
     this._resID = res;
     if (this._resID > 0) {
 
-      this.res = RoleRes.resMap[this.resID];
+      this.res = RoleData.resMap[this.resID];
 
       var self = this;
       Utils.LoadRes(this.res.resUrl, cc.SpriteFrame, function (err, res) {

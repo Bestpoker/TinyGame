@@ -1,10 +1,9 @@
 import Role, { TeamType } from "../entity/Role";
 import Magic from "../entity/Magic";
 import Utils from "../utils/Utils";
-import { DbPlayer } from "../data/DbData";
+import { DbPlayerData } from "../data/DbPlayerData";
 import { GameData } from "../data/GameData";
 import { DbHelper } from "../utils/DbHelper";
-import RoleData from "../data/RoleData";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html

@@ -1,4 +1,4 @@
-export class DbPlayer{
+export class DbPlayerData{
 
     _id: string = "";
 
