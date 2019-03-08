@@ -97,7 +97,7 @@ export default class Role extends cc.Component {
     if (this.node.getNumberOfRunningActions() == 0) {
       if (this.target && this.target.isValid) {
         var selfDis = this.target.grid.position.sub(this.grid.position).mag();
-        if (selfDis > this.res.attackRange) {
+        if (selfDis > this.res.attackRange * GameManager.instance.gridSize) {
           this.SeekEnemy();
         }
       }
@@ -107,7 +107,7 @@ export default class Role extends cc.Component {
 
       if (this.target && this.target.isValid) {
         var selfDis = this.target.grid.position.sub(this.grid.position).mag();
-        if (selfDis <= this.res.attackRange) {
+        if (selfDis <= this.res.attackRange * GameManager.instance.gridSize) {
           this.Attack();
         }
         else {
@@ -122,7 +122,7 @@ export default class Role extends cc.Component {
               if (GameManager.instance.CanEnterGrid(grid.position)) {
                 var selfDis = grid.position.sub(this.grid.position).mag();
                 var taregetDis = grid.position.sub(this.target.grid.position).mag();
-                if (selfDis <= this.res.moveRange) {
+                if (selfDis <= this.res.moveRange * GameManager.instance.gridSize) {
                   if (min == -1 || taregetDis < min) {
                     min = taregetDis;
                     dest = grid.position;

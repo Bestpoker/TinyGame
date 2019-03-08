@@ -10,7 +10,7 @@ export class MagicData {
          ID: 1,
          resUrl: "animation/magic/magic_1",
          attack: 200,
-         attackRange: 150,
+         attackRange: 1.5,
      },
   };
 

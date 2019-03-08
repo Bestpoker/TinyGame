@@ -68,7 +68,7 @@ export default class GameManager extends cc.Component {
     start() {
         if (this.isInited) {
 
-            this.gameLevelLabel.string = GameData.instance.playerData.gameLevel.toString();
+            this.gameLevelLabel.string = "关卡：" + GameData.instance.playerData.gameLevel.toString();
             this.goldLabel.string = GameData.instance.playerData.gold.toString();
 
             this.InitGird();
@@ -269,16 +269,16 @@ export default class GameManager extends cc.Component {
 
         this.currentTime = this.maxTime;
         this.currentTurn = TeamType.Player;
-        this.timeLabel.string = this.currentTime.toString();
+        this.timeLabel.string = "剩余时间：" + this.currentTime.toString();
 
         for (let index = 0; index < 10; index++) {
-            var ranX = Utils.GetRandomInt(0, 4) * 100;
-            var ranY = Utils.GetRandomInt(3, 5) * 100;
+            var ranX = Utils.GetRandomInt(0, 8) * this.gridSize;
+            var ranY = Utils.GetRandomInt(6, 8) * this.gridSize;
             this.RealCreateRole(2, cc.v2(ranX, ranY), TeamType.Monster);
         }
 
-        this.RealCreateRole(1, cc.v2(200, 0), TeamType.Player);
-        this.RealCreateRole(1, cc.v2(400, 0), TeamType.Player);
+        this.RealCreateRole(1, cc.v2(2 * this.gridSize, 0), TeamType.Player);
+        this.RealCreateRole(1, cc.v2(4 * this.gridSize, 0), TeamType.Player);
 
         for (var i = this.monsters.length - 1; i >= 0; i--) {
             this.monsters[i].currentHp += this.monsters[i].res.maxHp *  0.2 * (GameData.instance.playerData.gameLevel - 1);
@@ -316,7 +316,7 @@ export default class GameManager extends cc.Component {
                 if (this.currentTime <= 0) {
                     this.currentTime = 0;
                 }
-                this.timeLabel.string = this.currentTime.toFixed(0).toString();
+                this.timeLabel.string = "剩余时间：" + this.currentTime.toFixed(0).toString();
                 this.totalUpdateTime = 0;
             }
 
@@ -343,13 +343,13 @@ export default class GameManager extends cc.Component {
     }
 
     WinGame() {
-        this.timeLabel.string = "WIN";
+        this.timeLabel.string = "胜利";
         console.log("player win");
 
         GameData.instance.playerData.gameLevel += 1;
         GameData.instance.playerData.gold += GameData.instance.playerData.gameLevel * 10;
 
-        this.gameLevelLabel.string = GameData.instance.playerData.gameLevel.toString();
+        this.gameLevelLabel.string = "关卡：" + GameData.instance.playerData.gameLevel.toString();
         this.goldLabel.string = GameData.instance.playerData.gold.toString();
 
         DbHelper.SetGameLevel();
@@ -357,7 +357,7 @@ export default class GameManager extends cc.Component {
     }
 
     LoseGame() {
-        this.timeLabel.string = "LOSE";
+        this.timeLabel.string = "失败";
 
         GameData.instance.playerData.gold += GameData.instance.playerData.gameLevel * 3;
 
@@ -372,16 +372,18 @@ export default class GameManager extends cc.Component {
 
     //#region  grid
 
-    gridMaxX: number = 5;
+    gridMaxX: number = 8;
 
-    gridMaxY: number = 6;
+    gridMaxY: number = 8;
+
+    gridSize: number = 60;
 
     gridMap: { [key: string]: Grid; } = {};
 
     InitGird() {
         for (var i = 0; i < this.gridMaxX; i++) {
             for (var j = 0; j < this.gridMaxY; j++) {
-                var key = cc.v2(i * 100, j * 100);
+                var key = cc.v2(i * this.gridSize, j * this.gridSize);
                 var grid = new Grid();
                 grid.position = key;
                 this.gridMap[key.toString()] = grid;

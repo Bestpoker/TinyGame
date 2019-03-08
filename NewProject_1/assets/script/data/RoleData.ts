@@ -14,18 +14,18 @@ export class RoleData {
          resUrl: "model/role/character_1",
          maxHp: 400,
          attack: 200,
-         attackRange: 150,
+         attackRange: 1.5,
          attackSpeed: 1.5,
-         moveRange: 150,
+         moveRange: 1.5,
      },
      2: { 
          ID: 2,
          resUrl: "model/role/creature_1",
          maxHp: 200,
          attack: 50,
-         attackRange: 100,
+         attackRange: 1,
          attackSpeed: 2,
-         moveRange: 100,
+         moveRange: 1.5,
      },
   };
 
