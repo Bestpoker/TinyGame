@@ -4,6 +4,8 @@ import Utils from "../utils/Utils";
 import { DbPlayerData } from "../data/DbPlayerData";
 import { GameData } from "../data/GameData";
 import { DbHelper } from "../utils/DbHelper";
+import UIManager from "../ui/UIManager";
+import MainUI from "../ui/MainUI";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -29,9 +31,6 @@ export class Grid {
 export default class GameManager extends cc.Component {
 
     static instance: GameManager;
-
-    @property(cc.Label)
-    tipLabel: cc.Label = null;
 
     isInited: boolean = false;
 
@@ -68,8 +67,8 @@ export default class GameManager extends cc.Component {
     start() {
         if (this.isInited) {
 
-            this.gameLevelLabel.string = "关卡：" + GameData.instance.playerData.gameLevel.toString();
-            this.goldLabel.string = GameData.instance.playerData.gold.toString();
+            MainUI.instance.levelLabel.string = "关卡：" + GameData.instance.playerData.gameLevel.toString();
+            MainUI.instance.goldLabel.string = GameData.instance.playerData.gold.toString();
 
             this.InitGird();
             this.StartGame();
@@ -248,14 +247,7 @@ export default class GameManager extends cc.Component {
 
     totalUpdateTime: number = 0;
 
-    @property(cc.Label)
-    timeLabel: cc.Label = null;
 
-    @property(cc.Label)
-    gameLevelLabel: cc.Label = null;
-
-    @property(cc.Label)
-    goldLabel: cc.Label = null;
 
     StartGame() {
 
@@ -269,11 +261,11 @@ export default class GameManager extends cc.Component {
 
         this.currentTime = this.maxTime;
         this.currentTurn = TeamType.Player;
-        this.timeLabel.string = "剩余时间：" + this.currentTime.toString();
+        MainUI.instance.timeLabel.string = "剩余时间：" + this.currentTime.toString();
 
         for (let index = 0; index < 10; index++) {
             var ranX = Utils.GetRandomInt(0, 8) * this.gridSize;
-            var ranY = Utils.GetRandomInt(6, 8) * this.gridSize;
+            var ranY = Utils.GetRandomInt(4, 8) * this.gridSize;
             this.RealCreateRole(2, cc.v2(ranX, ranY), TeamType.Monster);
         }
 
@@ -281,7 +273,7 @@ export default class GameManager extends cc.Component {
         this.RealCreateRole(1, cc.v2(4 * this.gridSize, 0), TeamType.Player);
 
         for (var i = this.monsters.length - 1; i >= 0; i--) {
-            this.monsters[i].currentHp += this.monsters[i].res.maxHp *  0.2 * (GameData.instance.playerData.gameLevel - 1);
+            this.monsters[i].currentHp += this.monsters[i].res.maxHp * 0.2 * (GameData.instance.playerData.gameLevel - 1);
         }
 
 
@@ -316,7 +308,7 @@ export default class GameManager extends cc.Component {
                 if (this.currentTime <= 0) {
                     this.currentTime = 0;
                 }
-                this.timeLabel.string = "剩余时间：" + this.currentTime.toFixed(0).toString();
+                MainUI.instance.timeLabel.string = "剩余时间：" + this.currentTime.toFixed(0).toString();
                 this.totalUpdateTime = 0;
             }
 
@@ -343,25 +335,25 @@ export default class GameManager extends cc.Component {
     }
 
     WinGame() {
-        this.timeLabel.string = "胜利";
+        MainUI.instance.timeLabel.string = "胜利";
         console.log("player win");
 
         GameData.instance.playerData.gameLevel += 1;
         GameData.instance.playerData.gold += GameData.instance.playerData.gameLevel * 10;
 
-        this.gameLevelLabel.string = "关卡：" + GameData.instance.playerData.gameLevel.toString();
-        this.goldLabel.string = GameData.instance.playerData.gold.toString();
+        MainUI.instance.levelLabel.string = "关卡：" + GameData.instance.playerData.gameLevel.toString();
+        MainUI.instance.goldLabel.string = GameData.instance.playerData.gold.toString();
 
         DbHelper.SetGameLevel();
         DbHelper.SetGold();
     }
 
     LoseGame() {
-        this.timeLabel.string = "失败";
+        MainUI.instance.timeLabel.string = "失败";
 
         GameData.instance.playerData.gold += GameData.instance.playerData.gameLevel * 3;
 
-        this.goldLabel.string = GameData.instance.playerData.gold.toString();
+        MainUI.instance.goldLabel.string = GameData.instance.playerData.gold.toString();
 
         DbHelper.SetGold();
 
@@ -372,6 +364,15 @@ export default class GameManager extends cc.Component {
 
     //#region  grid
 
+    @property(cc.Node)
+    gridParent: cc.Node = null;
+
+    @property(cc.Prefab)
+    gridBlackPrefab: cc.Prefab = null;
+
+    @property(cc.Prefab)
+    gridWhitePrefab: cc.Prefab = null;
+
     gridMaxX: number = 8;
 
     gridMaxY: number = 8;
@@ -381,12 +382,29 @@ export default class GameManager extends cc.Component {
     gridMap: { [key: string]: Grid; } = {};
 
     InitGird() {
+        var black = false;
         for (var i = 0; i < this.gridMaxX; i++) {
+            black = !black;
             for (var j = 0; j < this.gridMaxY; j++) {
                 var key = cc.v2(i * this.gridSize, j * this.gridSize);
                 var grid = new Grid();
                 grid.position = key;
                 this.gridMap[key.toString()] = grid;
+                var gridUI: cc.Node = null;
+                if (black) {
+                    gridUI = cc.instantiate(this.gridBlackPrefab) as cc.Node;
+                }
+                else {
+                    gridUI = cc.instantiate(this.gridWhitePrefab) as cc.Node;
+                }
+
+                gridUI.setParent(this.gridParent);
+
+                gridUI.setPosition(key);
+
+                gridUI.setContentSize(this.gridSize, this.gridSize);
+
+                black = !black;
             }
         }
     }
@@ -426,25 +444,36 @@ export default class GameManager extends cc.Component {
     @property(cc.Prefab)
     hudPrefab: cc.Prefab = null;
 
+    hudUIPool: Array<cc.Node> = new Array<cc.Node>();
+
     @property(cc.Node)
     hudUI: cc.Node = null;
 
     CreateHud(hp: number, pos: cc.Vec2) {
-        var hud = cc.instantiate(this.hudPrefab);
-        hud.setParent(this.hudUI);
+        var hud: cc.Node = null;
+        if (this.hudUIPool.length > 0) {
+            hud = this.hudUIPool.pop();
+            hud.active = true;
+        }
+        else {
+            hud = cc.instantiate(this.hudPrefab);
+            hud.setParent(this.hudUI);
+        }
+
+
         hud.setPosition(pos.add(cc.v2(0, 50)));
 
         hud.getComponent(cc.Label).string = "-" + hp;
 
+        var self = this;
         var finished = cc.callFunc(function () {
-            hud.destroy();
+            self.hudUIPool.push(hud);
+            hud.active = false;
         });
 
         var moveAction = cc.sequence(cc.moveTo(0.5, pos.add(cc.v2(0, 100))), finished);
-        var fadeAction = cc.fadeOut(0.5);
 
         hud.runAction(moveAction);
-        hud.runAction(fadeAction);
 
     }
 
