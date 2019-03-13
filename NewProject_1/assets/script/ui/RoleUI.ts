@@ -1,4 +1,6 @@
 import UIManager from "./UIManager";
+import { DbPlayerData } from "../data/DbPlayerData";
+import { GameData } from "../data/GameData";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -23,6 +25,9 @@ export default class RoleUI extends cc.Component {
     @property(cc.Button)
     closeBtn: cc.Button = null;
 
+    @property(cc.Prefab)
+    roleItem: cc.Prefab = null;
+
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
@@ -40,4 +45,15 @@ export default class RoleUI extends cc.Component {
     OnClickCloseBtn(){
         UIManager.instance.CloseRoleUI();
     }
+    
+    OnOpenUI(){
+        if(GameData.instance.playerData.roles != null){
+            var array = GameData.instance.playerData.roles;
+            for (let index = 0; index < array.length; index++) {
+                const element = array[index];
+                
+            }
+        }
+    }
+
 }

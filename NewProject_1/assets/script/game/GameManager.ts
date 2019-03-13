@@ -6,6 +6,7 @@ import { GameData } from "../data/GameData";
 import { DbHelper } from "../utils/DbHelper";
 import UIManager from "../ui/UIManager";
 import MainUI from "../ui/MainUI";
+import { ShaderType } from "../shader/ShaderManager";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -43,6 +44,7 @@ export default class GameManager extends cc.Component {
 
         if (CC_WECHATGAME) {
             var self = this;
+
             DbHelper.Init(function (result) {
 
                 if (result) {
@@ -142,6 +144,10 @@ export default class GameManager extends cc.Component {
     @property(cc.Prefab)
     magicPrefab: cc.Prefab = null;
 
+    rolePool: Array<Role> = [];
+
+    magicPool: Array<Magic> = [];
+
     allNodes: Array<cc.Node> = [];
 
     players: Array<Role> = [];
@@ -210,7 +216,15 @@ export default class GameManager extends cc.Component {
             return null;
         }
 
-        var role = cc.instantiate(this.rolePrefab).getComponent(Role);
+        var role: Role = null;
+        if(this.rolePool.length > 0){
+            role = this.rolePool.pop();
+            role.node.active = true;
+        }
+        else{
+            role = cc.instantiate(this.rolePrefab).getComponent(Role);
+        }
+        
         role.resID = resID;
         role.node.setParent(this.battleField);
         role.node.setPosition(pos);
@@ -225,14 +239,25 @@ export default class GameManager extends cc.Component {
             this.allNodes.splice(index, 1);
         }
         this.OutGrid(role);
-        role.node.destroy();
+        // role.node.destroy();
+        role.node.active = false;
+        role.isDead = true;
+        this.rolePool.push(role);
         role = null;
         // Utils.RemoveRes(role.roleRes.resUrl);
 
     }
 
     CreateMagic(resID: number, pos: cc.Vec2) {
-        var magic = cc.instantiate(this.magicPrefab).getComponent(Magic);
+        var magic: Magic = null;
+        if(this.magicPool.length > 0){
+            magic = this.magicPool.pop();
+            magic.node.active = true;
+        }
+        else{
+            magic = cc.instantiate(this.magicPrefab).getComponent(Magic);
+        }
+        
         magic.resID = resID;
         magic.node.setParent(this.battleField);
         magic.node.setPosition(pos);
@@ -253,7 +278,10 @@ export default class GameManager extends cc.Component {
 
         // Utils.RemoveRes(magic.resName);
 
-        magic.node.destroy();
+        // magic.node.destroy();
+        magic.node.active = false;
+        this.magicPool.push(magic);
+        magic = null;
 
     }
 
@@ -469,36 +497,36 @@ export default class GameManager extends cc.Component {
     @property(cc.Prefab)
     hudPrefab: cc.Prefab = null;
 
-    hudUIPool: Array<cc.Node> = new Array<cc.Node>();
+    hudUIPool: Array<cc.Label> = [];
 
     @property(cc.Node)
     hudUI: cc.Node = null;
 
     CreateHud(hp: number, pos: cc.Vec2) {
-        var hud: cc.Node = null;
+        var hud: cc.Label = null;
         if (this.hudUIPool.length > 0) {
             hud = this.hudUIPool.pop();
-            hud.active = true;
+            hud.node.active = true;
         }
         else {
-            hud = cc.instantiate(this.hudPrefab);
-            hud.setParent(this.hudUI);
+            hud = cc.instantiate(this.hudPrefab).getComponent(cc.Label);
+            hud.node.setParent(this.hudUI);
         }
 
 
-        hud.setPosition(pos.add(cc.v2(0, 50)));
+        hud.node.setPosition(pos.add(cc.v2(0, 50)));
 
         hud.getComponent(cc.Label).string = "-" + hp;
 
         var self = this;
         var finished = cc.callFunc(function () {
             self.hudUIPool.push(hud);
-            hud.active = false;
+            hud.node.active = false;
         });
 
         var moveAction = cc.sequence(cc.moveTo(0.5, pos.add(cc.v2(0, 100))), finished);
 
-        hud.runAction(moveAction);
+        hud.node.runAction(moveAction);
 
     }
 

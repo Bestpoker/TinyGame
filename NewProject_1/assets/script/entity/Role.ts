@@ -44,25 +44,27 @@ export default class Role extends cc.Component {
   _resID: number = 0;
   get resID() { return this._resID; }
   set resID(res) {
-    this._resID = res;
-    if (this._resID > 0) {
+    if (this._resID != res) {
+      this._resID = res;
+      this.sprite.spriteFrame = null;
+      if (this._resID > 0) {
 
-      this.res = RoleData.resMap[this.resID];
+        this.res = RoleData.resMap[this.resID];
 
-      var self = this;
-      Utils.LoadRes(this.res.resUrl, cc.SpriteFrame, function (err, res) {
-        if (err) {
-          console.error(err);
-        }
-        else {
-          self.sprite.spriteFrame = res;
-        }
-      });
-
-      this.currentHp = this.res.maxHp;
-
-
+        var self = this;
+        Utils.LoadRes(this.res.resUrl, cc.SpriteFrame, function (err, res) {
+          if (err) {
+            console.error(err);
+          }
+          else {
+            self.sprite.spriteFrame = res;
+          }
+        });
+      }
     }
+
+    this.Init();
+
   }
 
   target: Role = null;
@@ -76,6 +78,25 @@ export default class Role extends cc.Component {
   currentHp: number;
 
   currentMp = 0;
+
+  isDead: boolean = false;
+
+  Init() {
+    this.node.stopAllActions();
+
+    if (this.shaderCom) {
+      this.shaderCom.shader = ShaderType.Default;
+    }
+
+    this.currentHp = this.res.maxHp;
+    this.currentMp = 0;
+    this.unAttackable = false;
+
+    this.lastJumpTime = 0;
+    this.target = null;
+    this.lastAttackTime = 0;
+    this.isDead = false;
+  }
 
 
   // LIFE-CYCLE CALLBACKS:
@@ -93,9 +114,9 @@ export default class Role extends cc.Component {
   // }
 
   UpdateRole(dt) {
-    
+
     if (this.node.getNumberOfRunningActions() == 0) {
-      if (this.target && this.target.isValid) {
+      if (this.target && !this.target.isDead) {
         var selfDis = this.target.grid.position.sub(this.grid.position).mag();
         if (selfDis > this.res.attackRange * GameManager.instance.gridSize) {
           this.SeekEnemy();
@@ -105,7 +126,7 @@ export default class Role extends cc.Component {
         this.SeekEnemy();
       }
 
-      if (this.target && this.target.isValid) {
+      if (this.target && !this.target.isDead) {
         var selfDis = this.target.grid.position.sub(this.grid.position).mag();
         if (selfDis <= this.res.attackRange * GameManager.instance.gridSize) {
           this.Attack();
@@ -170,7 +191,7 @@ export default class Role extends cc.Component {
   }
 
   SetTarget(target: Role) {
-    if (target && target.isValid) {
+    if (target && !target.isDead) {
       this.target = target;
     }
   }
@@ -224,23 +245,36 @@ export default class Role extends cc.Component {
 
     GameManager.instance.CreateHud(hp, this.node.position);
 
-    if (this.shaderCom) {
-      this.unschedule(this.Recover);
-      this.shaderCom.shader = ShaderType.Hurt;
-      this.scheduleOnce(this.Recover, 0.1);
-    }
+
 
     if (this.currentHp <= 0) {
       this.unAttackable = true;
 
+      // var self = this;
+      // var finished = cc.callFunc(function () {
+      //   GameManager.instance.RealRemoveRole(self);
+      // });
+
+      // var fadeAction = cc.sequence(cc.fadeOut(0.5), finished);
+
+      // this.node.runAction(fadeAction);
+
+      if (this.shaderCom) {
+        this.unschedule(this.Recover);
+        this.shaderCom.shader = ShaderType.Dissolve;
+      }
+
       var self = this;
-      var finished = cc.callFunc(function () {
+      this.scheduleOnce(function () {
         GameManager.instance.RealRemoveRole(self);
-      });
-
-      var moveAction = cc.sequence(cc.fadeOut(0.5), finished);
-
-      this.node.runAction(moveAction);
+      }, 1);
+    }
+    else {
+      if (this.shaderCom) {
+        this.unschedule(this.Recover);
+        this.shaderCom.shader = ShaderType.Hurt;
+        this.scheduleOnce(this.Recover, 0.1);
+      }
     }
 
   }

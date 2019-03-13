@@ -28,32 +28,48 @@ export default class Magic extends cc.Component {
 
     atlas: cc.SpriteAtlas;
 
+    clipName: string = "";
+
     _resID: number = 0;
     get resID() { return this._resID; }
     set resID(res) {
-        this._resID = res;
-        if (this._resID > 0) {
+        if (this._resID != res) {
+            this._resID = res;
+            if (this._resID > 0) {
 
-            this.res = MagicData.resMap[this.resID];
+                this.res = MagicData.resMap[this.resID];
+                this.animation.stop();
 
-            var self = this;
-
-            Utils.LoadRes(this.res.resUrl, cc.AnimationClip, function (err, res) {
-                if (err) {
-                    console.error(err);
+                if (this.animation.currentClip != null) {
+                    this.animation.removeClip(this.animation.currentClip);
                 }
-                else {
-                    var clip = <cc.AnimationClip>res;
-                    self.animation.addClip(clip);
-                    self.animation.play(clip.name);
-                    self.scheduleOnce(function () { 
-                        GameManager.instance.RemoveMagic(self);
-                     }, clip.duration * clip.speed);
-                }
-            });
+
+                var self = this;
+                Utils.LoadRes(this.res.resUrl, cc.AnimationClip, function (err, res) {
+                    if (err) {
+                        console.error(err);
+                    }
+                    else {
+                        var clip = <cc.AnimationClip>res;
+                        self.animation.addClip(clip);
+                        self.clipName = clip.name;
+                        self.animation.play(clip.name);
+                        self.scheduleOnce(function () {
+                            GameManager.instance.RemoveMagic(self);
+                        }, clip.duration * clip.speed);
+                    }
+                });
 
 
+            }
         }
+        else{
+            this.animation.play(this.clipName);
+            this.scheduleOnce(function () {
+                GameManager.instance.RemoveMagic(this);
+            }, this.animation.currentClip.duration * this.animation.currentClip.speed);
+        }
+
     }
 
     // LIFE-CYCLE CALLBACKS:
