@@ -5,6 +5,8 @@ export class DbHelper {
 
     static db;
 
+    static playerDBName: string = 'player_2';
+
     static Init(callback: Function) {
         if (CC_WECHATGAME) {
             const wx = window["wx"];
@@ -12,92 +14,80 @@ export class DbHelper {
             // 1. 获取数据库引用
             DbHelper.db = wx.cloud.database();
 
-            DbHelper.db.collection('user').where({
-                _id: 'player' // 填入当前用户 openid
-            }).get({
+            DbHelper.db.collection('user').doc(DbHelper.playerDBName).get({
                 success(res) {
-                    console.log("查询成功")
+                    console.log("查询成功 res.data")
                     console.log(res.data)
 
+                    // GameData.instance.playerData = res.data as DbPlayer;
 
-                    if (res.data.length == 0) {
+                    var data = res.data as DbPlayerData;
 
-                        DbHelper.db.collection('user').add({
-                            // data 字段表示需新增的 JSON 数据
-                            data: {
-                                _id: 'player'
-                            },
-                            success(res) {
-                                console.log("创建player成功");
-                                console.log(res);
-
-                                DbHelper.db.collection('user').get({
-                                    success(res) {
-                                        console.log("查询player成功")
-                                        console.log(res.data);
-
-                                        var player = res.data[0] as DbPlayerData;
-                                        // GameData.instance.playerData = res.data[0] as DbPlayer;
-
-                                        var data = res.data[0] as DbPlayerData;
-
-                                        for (const key of Object.keys(GameData.instance.playerData)) {
-                                            if (data.hasOwnProperty(key)) {
-                                                if (data.valueOf() != null && data.valueOf() != undefined) {
-                                                    GameData.instance.playerData[key] = data[key];
-                                                }
-                                            }
-                
-                                        }
-
-                                        callback(true);
-                                    },
-                                    fail() {
-                                        console.log("查询player失败")
-                                        callback(false);
-                                    }
-                                });
-
-                            },
-                            fail() {
-                                console.log("创建player失败")
-                                callback(false);
+                    for (const key of Object.keys(GameData.instance.playerData)) {
+                        if (data.hasOwnProperty(key)) {
+                            if (data.valueOf() != null && data.valueOf() != undefined) {
+                                GameData.instance.playerData[key] = data[key];
                             }
-                        });
-
-                    }
-                    else {
-                        console.log(res.data[0])
-
-                        // GameData.instance.playerData = res.data[0] as DbPlayer;
-
-                        var data = res.data[0] as DbPlayerData;
-
-                        for (const key of Object.keys(GameData.instance.playerData)) {
-                            if (data.hasOwnProperty(key)) {
-                                if (data.valueOf() != null && data.valueOf() != undefined) {
-                                    GameData.instance.playerData[key] = data[key];
-                                }
-                            }
-
                         }
 
-                        callback(true);
-
                     }
+
+                    callback(true);
+
                 },
                 fail() {
-                    console.log("查询失败")
-                    callback(false);
+                    console.log("查询失败 res.data add")
+                    DbHelper.db.collection('user').add({
+                        // data 字段表示需新增的 JSON 数据
+                        data: {
+                            _id: DbHelper.playerDBName
+                        },
+                        success(res) {
+                            console.log("创建player成功 res");
+                            console.log(res);
+
+                            DbHelper.db.collection('user').doc(DbHelper.playerDBName).get({
+                                success(res) {
+                                    console.log("查询player成功 res.data")
+                                    console.log(res.data);
+
+                                    var player = res.data as DbPlayerData;
+                                    // GameData.instance.playerData = res.data as DbPlayer;
+
+                                    var data = res.data as DbPlayerData;
+
+                                    for (const key of Object.keys(GameData.instance.playerData)) {
+                                        if (data.hasOwnProperty(key)) {
+                                            if (data.valueOf() != null && data.valueOf() != undefined) {
+                                                GameData.instance.playerData[key] = data[key];
+                                            }
+                                        }
+
+                                    }
+
+                                    callback(true);
+                                },
+                                fail() {
+                                    console.log("查询player失败")
+                                    callback(false);
+                                }
+                            });
+
+                        },
+                        fail() {
+                            console.log("创建player失败")
+                            callback(false);
+                        }
+                    });
                 }
             })
             console.log("异步");
         }
     }
 
-    static SetPlayerData(){
+    static SetPlayerData() {
         if (CC_WECHATGAME) {
-            DbHelper.db.collection('user').doc('player').set({
+            DbHelper.db.collection('user').doc(DbHelper.playerDBName).set({
                 data: {
                     gameLevel: GameData.instance.playerData.gameLevel,
                     gold: GameData.instance.playerData.gold
@@ -122,13 +112,13 @@ export class DbHelper {
     static SetGameLevel() {
         if (CC_WECHATGAME) {
             console.log("更新关卡 start");
-            DbHelper.db.collection('user').doc('player').update({
+            DbHelper.db.collection('user').doc(DbHelper.playerDBName).update({
                 data: {
                     gameLevel: GameData.instance.playerData.gameLevel
                 },
                 success(res) {
                     if (res.stats.updated == 1) {
-                        console.log("更新等级成功" + GameData.instance.playerData.gameLevel);
+                        console.log("更新等级成功 " + GameData.instance.playerData.gameLevel);
                     }
                     else {
                         console.log("更新等级失败");
@@ -146,7 +136,7 @@ export class DbHelper {
     static SetGold() {
         if (CC_WECHATGAME) {
             console.log("更新金币 start");
-            DbHelper.db.collection('user').doc('player').update({
+            DbHelper.db.collection('user').doc(DbHelper.playerDBName).update({
                 data: {
                     gold: GameData.instance.playerData.gold
                 },
@@ -170,7 +160,7 @@ export class DbHelper {
     static SetRoles() {
         if (CC_WECHATGAME) {
             console.log("更新人物 start");
-            DbHelper.db.collection('user').doc('player').update({
+            DbHelper.db.collection('user').doc(DbHelper.playerDBName).update({
                 data: {
                     roles: GameData.instance.playerData.roles
                 },
