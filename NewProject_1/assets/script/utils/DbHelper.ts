@@ -121,6 +121,7 @@ export class DbHelper {
 
     static SetGameLevel() {
         if (CC_WECHATGAME) {
+            console.log("更新关卡 start");
             DbHelper.db.collection('user').doc('player').update({
                 data: {
                     gameLevel: GameData.instance.playerData.gameLevel
@@ -131,7 +132,6 @@ export class DbHelper {
                     }
                     else {
                         console.log("更新等级失败");
-                        DbHelper.SetPlayerData();
                     }
                 },
                 fail() {
@@ -145,6 +145,7 @@ export class DbHelper {
 
     static SetGold() {
         if (CC_WECHATGAME) {
+            console.log("更新金币 start");
             DbHelper.db.collection('user').doc('player').update({
                 data: {
                     gold: GameData.instance.playerData.gold
@@ -155,11 +156,34 @@ export class DbHelper {
                     }
                     else {
                         console.log("更新金币失败");
-                        DbHelper.SetPlayerData();
                     }
                 },
                 fail() {
                     console.log("更新金币失败 fail");
+                }
+            })
+
+
+        }
+    }
+
+    static SetRoles() {
+        if (CC_WECHATGAME) {
+            console.log("更新人物 start");
+            DbHelper.db.collection('user').doc('player').update({
+                data: {
+                    roles: GameData.instance.playerData.roles
+                },
+                success(res) {
+                    if (res.stats.updated == 1) {
+                        console.log("更新人物成功 " + GameData.instance.playerData.roles);
+                    }
+                    else {
+                        console.log("更新人物失败");
+                    }
+                },
+                fail() {
+                    console.log("更新人物失败 fail");
                 }
             })
 

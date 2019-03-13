@@ -1,4 +1,5 @@
 import MainUI from "./MainUI";
+import RoleUI from "./RoleUI";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -25,7 +26,10 @@ export default class UIManager extends cc.Component {
     };
 
     @property(cc.Prefab)
-    mainUI: cc.Prefab = null;
+    mainUIPrefab: cc.Prefab = null;
+
+    @property(cc.Prefab)
+    roleUIPrefab: cc.Prefab = null;
 
 
     // LIFE-CYCLE CALLBACKS:
@@ -40,8 +44,7 @@ export default class UIManager extends cc.Component {
             this.allLayer[index] = node;
         }
 
-        var _mainUI = cc.instantiate(this.mainUI) as cc.Node;
-        _mainUI.setParent(this.allLayer[_mainUI.getComponent(MainUI).uiLayer]);
+        this.OpenMainUI();
 
 
     }
@@ -51,5 +54,27 @@ export default class UIManager extends cc.Component {
     }
 
     // update (dt) {}
+
+    OpenMainUI(){
+        var ui = cc.instantiate(this.mainUIPrefab) as cc.Node;
+        ui.setParent(this.allLayer[ui.getComponent(MainUI).uiLayer]);
+    }
+
+    CloseMainUI(){
+        if(MainUI.instance.node.isValid){
+            MainUI.instance.node.destroy();
+        }
+    }
+
+    OpenRoleUI(){
+        var ui = cc.instantiate(this.roleUIPrefab) as cc.Node;
+        ui.setParent(this.allLayer[ui.getComponent(RoleUI).uiLayer]);
+    }
+
+    CloseRoleUI(){
+        if(RoleUI.instance.node.isValid){
+            RoleUI.instance.node.destroy();
+        }
+    }
 
 }

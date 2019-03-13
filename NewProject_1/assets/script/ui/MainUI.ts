@@ -1,3 +1,6 @@
+import UIManager from "./UIManager";
+import { GameData } from "../data/GameData";
+
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
 //  - [English] http://www.cocos2d-x.org/docs/creator/manual/en/scripting/typescript.html
@@ -52,7 +55,7 @@ export default class MainUI extends cc.Component {
     // update (dt) {}
 
     OnClickRoleBtn(btn: cc.Button){
-        
+        UIManager.instance.OpenRoleUI();
     }
 
     OnClickBagBtn(btn: cc.Button){

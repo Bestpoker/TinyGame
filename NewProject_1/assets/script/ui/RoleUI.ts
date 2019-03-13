@@ -1,3 +1,5 @@
+import UIManager from "./UIManager";
+
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
 //  - [English] http://www.cocos2d-x.org/docs/creator/manual/en/scripting/typescript.html
@@ -15,10 +17,18 @@ export default class RoleUI extends cc.Component {
 
     static instance: RoleUI;
 
+    @property(Number)
+    uiLayer: number = 0;
+
+    @property(cc.Button)
+    closeBtn: cc.Button = null;
+
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
         RoleUI.instance = this;
+
+        this.closeBtn.node.on('click', this.OnClickCloseBtn, this);
     }
 
     start () {
@@ -26,4 +36,8 @@ export default class RoleUI extends cc.Component {
     }
 
     // update (dt) {}
+
+    OnClickCloseBtn(){
+        UIManager.instance.CloseRoleUI();
+    }
 }

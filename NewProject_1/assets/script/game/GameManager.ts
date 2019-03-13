@@ -1,7 +1,7 @@
 import Role, { TeamType } from "../entity/Role";
 import Magic from "../entity/Magic";
 import Utils from "../utils/Utils";
-import { DbPlayerData } from "../data/DbPlayerData";
+import { DbPlayerData, DbRoleData } from "../data/DbPlayerData";
 import { GameData } from "../data/GameData";
 import { DbHelper } from "../utils/DbHelper";
 import UIManager from "../ui/UIManager";
@@ -66,6 +66,31 @@ export default class GameManager extends cc.Component {
 
     start() {
         if (this.isInited) {
+
+            console.log("开始游戏 start");
+            if (GameData.instance.playerData.roles == null || GameData.instance.playerData.roles.length == 0) {
+                var data = new DbRoleData();
+                data.roleID = 1;
+                GameData.instance.playerData.roles.push(data);
+                data = new DbRoleData();
+                data.roleID = 2;
+                GameData.instance.playerData.roles.push(data);
+                DbHelper.SetRoles();
+            }
+            else {
+                var needSava = false;
+                for (let index = 0; index < GameData.instance.playerData.roles.length; index++) {
+                    const element = GameData.instance.playerData.roles[index];
+                    if (element.roleName == null) {
+                        element.roleName = "name_" + index;
+                        needSava = true;
+                    }
+                }
+
+                if (needSava) {
+                    DbHelper.SetRoles();
+                }
+            }
 
             MainUI.instance.levelLabel.string = "关卡：" + GameData.instance.playerData.gameLevel.toString();
             MainUI.instance.goldLabel.string = GameData.instance.playerData.gold.toString();
