@@ -17,8 +17,6 @@ const { ccclass, property } = cc._decorator;
 @ccclass
 export default class Player extends cc.Component {
 
-    public static instance = null;
-
     @property(cc.Vec2)
     moveDir = cc.v2(0, 1);
 
@@ -44,9 +42,6 @@ export default class Player extends cc.Component {
     track2: cc.Animation = null;
 
     @property(cc.Node)
-    bulletPrefab: cc.Node = null;
-
-    @property(cc.Node)
     tower: cc.Node = null;
 
     @property(cc.Node)
@@ -61,10 +56,32 @@ export default class Player extends cc.Component {
     @property(cc.Node)
     gun: cc.Node = null;
 
+    gunAction: cc.Action = null;
+    gunStartPos: cc.Vec2;
+
+    @property(Number)
+    teamID: number = 0;
+
+    @property(Number)
+    roleID: number = 0;
+
     // LIFE-CYCLE CALLBACKS:
 
+    Init(){
+        this._speedType = SpeedType.STOP;
+        this._moveSpeed = 0;
+        this.track1.stop();
+        this.track2.stop();
+        this.tower.angle = 0;
+        this.gun.position = this.gunStartPos;
+        this.target = null;
+        this.teamID = 0;
+        this.roleID = 0;
+    }
+
     onLoad () {
-        Player.instance = this;
+        this.gunStartPos = this.gun.position;
+        this.gunAction = cc.sequence(cc.moveTo(0.1, this.gunStartPos.x, this.gunStartPos.y - 10), cc.moveTo(0.1, this.gunStartPos.x, this.gunStartPos.y));
     }
 
     start() {
@@ -151,11 +168,10 @@ export default class Player extends cc.Component {
             this.node.y = Data.instance.mapMinY - this.playerHalfSize;
         }
 
-        Game.instance.mainCamera.position = this.node.position;
-
-
-
-
+        if(this.teamID = 1){
+            Game.instance.mainCamera.position = this.node.position;
+        }
+        
 
     }
 
@@ -198,30 +214,19 @@ export default class Player extends cc.Component {
 
     }
 
-    bulletPool: cc.Node[] = [];
-    gunAction: cc.Action = null;
-    gunStartPos: cc.Vec2;
+    
 
     public CreateBullet() {
-        if(this.gunAction == null){
-            this.gunStartPos = this.gun.position;
-            this.gunAction = cc.sequence(cc.moveTo(0.1, this.gunStartPos.x, this.gunStartPos.y - 10), cc.moveTo(0.1, this.gunStartPos.x, this.gunStartPos.y));
-        }
+        
         this.gun.runAction(this.gunAction);
 
-        var bullet: cc.Node = null;
-        if (this.bulletPool.length > 0) {
-            bullet = this.bulletPool.pop();
-        }
-        else {
-            bullet = cc.instantiate(this.bulletPrefab);
-        }
+        var bullet = Game.instance.CreateBullet();
+        bullet.roleID = this.roleID;
+        bullet.teamID = this.teamID;
 
-        bullet.active = true;
-        bullet.setParent(Game.instance.bulletParent);
         var p = this.bulletStartNode.parent.convertToWorldSpaceAR(this.bulletStartNode.position);
         var pos = Game.instance.bulletParent.convertToNodeSpaceAR(p);
-        bullet.position = pos;
+        bullet.node.position = pos;
 
         //计算出朝向
         var p1 = this.tower.parent.convertToWorldSpaceAR(this.tower.position);
@@ -230,8 +235,35 @@ export default class Player extends cc.Component {
         var angle = dir.signAngle(cc.v2(1,0));
 
         var degree = angle / Math.PI * 180;
-        bullet.rotation = degree;
+        bullet.node.angle = -degree;
 
+    }
+
+    onCollisionEnter(other: cc.BoxCollider, self: cc.BoxCollider) {
+        console.log('on collision enter');
+    
+        if(other.getComponent('Bullet') != null){
+            this.node.active = false;
+        }
+
+        // // 碰撞系统会计算出碰撞组件在世界坐标系下的相关的值，并放到 world 这个属性里面
+        // var world = self.world;
+    
+        // // 碰撞组件的 aabb 碰撞框
+        // var aabb = world.aabb;
+    
+        // // 节点碰撞前上一帧 aabb 碰撞框的位置
+        // var preAabb = world.preAabb;
+    
+        // // 碰撞框的世界矩阵
+        // var t = world.transform;
+    
+        // // 以下属性为圆形碰撞组件特有属性
+        // var r = world.radius;
+        // var p = world.position;
+    
+        // // 以下属性为 矩形 和 多边形 碰撞组件特有属性
+        // var ps = world.points;
     }
 
 }

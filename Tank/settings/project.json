@@ -11,6 +11,7 @@
       true,
       true,
       null,
+      true,
       true
     ],
     [
@@ -24,6 +25,13 @@
       true,
       false,
       true
+    ],
+    [
+      false,
+      true,
+      false,
+      false,
+      false
     ]
   ],
   "design-resolution-height": 640,
@@ -49,7 +57,8 @@
     "default",
     "player",
     "ui",
-    "background"
+    "background",
+    "bullet"
   ],
   "last-module-event-record-time": 1561711821319,
   "simulator-orientation": false,
@@ -58,6 +67,5 @@
     "width": 960
   },
   "use-customize-simulator": true,
-  "use-project-simulator-setting": false,
-  "start-scene": "current"
+  "use-project-simulator-setting": false
 }

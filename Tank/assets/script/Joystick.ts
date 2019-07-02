@@ -22,7 +22,6 @@ export default class Joystick extends cc.Component {
   @property(cc.Node)
   ring = null;
 
-  @property(cc.Node)
   player = null;
 
   @property({ type: cc.Enum(JoystickType) })
