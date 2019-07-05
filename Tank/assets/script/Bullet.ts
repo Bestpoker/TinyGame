@@ -1,4 +1,5 @@
 import Game from "./Game";
+import Tank from "./Tank";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -17,24 +18,28 @@ export default class Bullet extends cc.Component {
 
     // LIFE-CYCLE CALLBACKS:
 
-    @property(Number)
-    moveSpeed: number = 0;
+    private moveSpeed: number = 0;
 
-    @property(Number)
-    flyTime: number = 0;
+    private attackRange: number = 0;
 
-    life = 0;
+    private life = 0;
+
+    private maxFlyTime = 0;
 
     roleID = 0;
 
     teamID = 0;
 
+    isDead = false;
+
     Init(){
         this.moveSpeed = 0;
-        this.flyTime = 0;
+        this.attackRange = 0;
         this.life = 0;
+        this.maxFlyTime = 0;
         this.roleID = 0;
         this.teamID = 0;
+        this.isDead = false;
     }
 
     // onLoad () {
@@ -47,12 +52,21 @@ export default class Bullet extends cc.Component {
 
     update(dt) {
 
-        if(this.life >= this.flyTime){
+        if(this.isDead){
+            return;
+        }
+
+        if(this.life >= this.maxFlyTime){
             Game.instance.DestroyBullet(this);
             return;
         }
 
-        
+        this.life += dt;
+
+        if(this.life > this.maxFlyTime){
+            dt = dt - (this.life - this.maxFlyTime);
+            this.life = this.maxFlyTime;
+        }
 
         //由于Math函数接受的是孤度，所以我们先节节点的旋转转化为弧度
         var angle = this.node.angle / 180 * Math.PI;
@@ -65,31 +79,29 @@ export default class Bullet extends cc.Component {
         this.node.x += dt * dir.x * this.moveSpeed;
         this.node.y += dt * dir.y * this.moveSpeed;
 
-        this.life += dt;
+        
     }
 
     onCollisionEnter(other: any, self: any) {
-        console.log('on collision enter');
+        // console.log('on collision enter');
 
-        Game.instance.DestroyBullet(this);
-    
-        // // 碰撞系统会计算出碰撞组件在世界坐标系下的相关的值，并放到 world 这个属性里面
-        // var world = self.world;
-    
-        // // 碰撞组件的 aabb 碰撞框
-        // var aabb = world.aabb;
-    
-        // // 节点碰撞前上一帧 aabb 碰撞框的位置
-        // var preAabb = world.preAabb;
-    
-        // // 碰撞框的世界矩阵
-        // var t = world.transform;
-    
-        // // 以下属性为圆形碰撞组件特有属性
-        // var r = world.radius;
-        // var p = world.position;
-    
-        // // 以下属性为 矩形 和 多边形 碰撞组件特有属性
-        // var ps = world.points;
+        if(this.isDead){
+            return;
+        }
+
+        var otherPlayer = other.getComponent(Tank);
+        if(otherPlayer != null){
+            if(otherPlayer.roleID != this.roleID){
+                Game.instance.DestroyBullet(this);
+                return;
+            }
+        }
+        
+    }
+
+    SetInfo(attackRange: number, moveSpeed: number){
+        this.moveSpeed = moveSpeed;
+        this.attackRange = attackRange;
+        this.maxFlyTime = attackRange / moveSpeed;
     }
 }

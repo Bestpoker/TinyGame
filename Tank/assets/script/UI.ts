@@ -1,6 +1,7 @@
-import { JoystickType } from "./JoystickCommon";
+import { JoystickType } from "./JoystickEnum";
 import Joystick from "./Joystick";
-import Player from "./Player";
+import Tank from "./Tank";
+import Game from "./Game";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -25,20 +26,15 @@ export default class UI extends cc.Component {
     @property(cc.Button)
     shootBtn: cc.Button = null;
 
-    @property(Player)
-    player: Player = null;
-
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
         UI.instance = this;
 
-        this.joystick.player = this.player;
-
         var clickEventHandler = new cc.Component.EventHandler();
-        clickEventHandler.target = this.player.node; //这个 node 节点是你的事件处理代码组件所属的节点，这里就是Button2
-        clickEventHandler.component = "Player";//这个是脚本文件名
-        clickEventHandler.handler = "CreateBullet"; //回调函名称
+        clickEventHandler.target = this.node; //这个 node 节点是你的事件处理代码组件所属的节点，这里就是Button2
+        clickEventHandler.component = "UI";//这个是脚本文件名
+        clickEventHandler.handler = "onClickShootBtn"; //回调函名称
         clickEventHandler.customEventData = ""; //用户数据
         this.shootBtn.clickEvents.push(clickEventHandler);
     }
@@ -57,5 +53,12 @@ export default class UI extends cc.Component {
 	useFollowType () {
 		this.joystick.joystickType = JoystickType.FOLLOW;
 		this.joystick.node.opacity = 0;
-	}
+    }
+    
+    onClickShootBtn(){
+        if(Game.instance.player != null){
+            Game.instance.player.CreateBullet();
+        }
+    }
+
 }
