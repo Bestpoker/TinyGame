@@ -1,6 +1,7 @@
 import Data from "./Data";
 import Bullet from "./Bullet";
 import Tank from "./Tank";
+import { MyNodeList } from "./MyNodeList";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -48,6 +49,8 @@ export default class Game extends cc.Component {
 
     tankPool: cc.Node[] = [];
 
+    tankNodeList: MyNodeList<Tank> = new MyNodeList<Tank>();
+
 
     // LIFE-CYCLE CALLBACKS:
 
@@ -73,6 +76,8 @@ export default class Game extends cc.Component {
 
     lateUpdate() {
         Game.instance.mainCamera.position = this.player.node.position;
+
+        this.tankNodeList.print();
     }
 
     CreateBullet(): Bullet {
@@ -116,6 +121,8 @@ export default class Game extends cc.Component {
         result.Init();
 
         this.allTanks.push(result);
+
+        this.tankNodeList.add(result);
 
         return result;
     }
