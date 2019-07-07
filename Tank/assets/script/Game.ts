@@ -154,7 +154,7 @@ export default class Game extends cc.Component {
     SearchEnemyWithNearest(tank: Tank){
         this.allTanks.forEach(element => {
             if(element != tank){
-
+                
             }
         });
     }

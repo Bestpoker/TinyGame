@@ -21,6 +21,8 @@ export default class Tank extends cc.Component {
     @property(cc.Vec2)
     moveDir = cc.v2(0, 1);
 
+    towerDic = cc.v2(0, 0);
+
     @property({ type: cc.Enum(SpeedType) })
     _speedType = SpeedType.STOP;
 
@@ -53,7 +55,7 @@ export default class Tank extends cc.Component {
 
     rotateSpeed: number = 50;
 
-    towerRotateSpeed: number = 50;
+    towerRotateSpeed: number = 100;
 
     playerHalfSize: number = 50;
 
@@ -75,7 +77,11 @@ export default class Tank extends cc.Component {
 
     bulletAttackRange = 500;
 
-    bulletMoveSpeed = 5000;
+    bulletMoveSpeed = 1000;
+
+    attackSpeed = 1;
+
+    attackLife = 0;
 
     // LIFE-CYCLE CALLBACKS:
 
@@ -91,6 +97,10 @@ export default class Tank extends cc.Component {
         this.roleID = 0;
         this.isDead = false;
         this.isAI = false;
+        // this.bulletAttackRange = 0;
+        // this.bulletMoveSpeed = 0;
+        // this.attackSpeed = 0;
+        this.attackLife = 0;
     }
 
     onLoad() {
@@ -108,13 +118,28 @@ export default class Tank extends cc.Component {
             return;
         }
 
-        this.AimTarget(dt);
+        // this.AimTarget(dt);
 
         this.move(dt);
+
+        this.RotateTower(dt);
+
+        this.attack(dt);
+
+        this.DoAIWork(dt);
+
         // console.log(this.moveDir)
         // console.log(this._moveSpeed)
 
 
+    }
+
+    attack(dt){
+        this.attackLife += dt;
+        if(this.attackLife >= this.attackSpeed){
+            this.attackLife = this.attackLife - this.attackSpeed;
+            this.CreateBullet();
+        }
     }
 
 
@@ -235,9 +260,9 @@ export default class Tank extends cc.Component {
     }
 
 
-    DoAIWork(){
-        if(this.isAI){
-
+    DoAIWork(dt) {
+        if (this.isAI) {
+            this.AimTarget(dt);
         }
     }
 
@@ -298,7 +323,6 @@ export default class Tank extends cc.Component {
     }
 
     AimTarget(dt) {
-
         var targetNum = 0;
         if (this.target != null && !this.target.isDead) {
             var p = this.target.node.parent.convertToWorldSpaceAR(this.target.node.position);
@@ -352,6 +376,71 @@ export default class Tank extends cc.Component {
         if (Math.abs(targetNum - this.tower.angle) < rotateSpeedTemp) {
             this.tower.angle = targetNum;
         }
+    }
+
+    RotateTower(dt) {
+
+        if (this.towerDic.x == 0 && this.towerDic.y == 0) {
+            return;
+        }
+        
+        var targetNum = 0;
+
+        var angle = this.towerDic.signAngle(cc.v2(1, 0));
+
+        var degree = angle / Math.PI * 180;
+        targetNum = -degree;
+
+        if (targetNum < 0) {
+            targetNum += 360;
+        }
+
+        targetNum = targetNum - this.node.angle;
+
+        if (targetNum < 0) {
+            targetNum += 360;
+        }
+        
+        // this.tower.angle = targetNum;
+
+        // return;
+
+        var rotateSpeedTemp = this.towerRotateSpeed * dt;
+
+        if (this.tower.angle < targetNum) {
+            if (targetNum - this.tower.angle > 180) {
+                this.tower.angle -= rotateSpeedTemp;
+                if (this.tower.angle < 0) {
+                    this.tower.angle += 360;
+                }
+            }
+            else {
+                this.tower.angle += rotateSpeedTemp;
+                if (this.tower.angle > 360) {
+                    this.tower.angle -= 360;
+                }
+            }
+        }
+        else if (this.tower.angle > targetNum) {
+            if (this.tower.angle - targetNum < 180) {
+                this.tower.angle -= rotateSpeedTemp;
+                if (this.tower.angle < 0) {
+                    this.tower.angle += 360;
+                }
+            }
+            else {
+                this.tower.angle += rotateSpeedTemp;
+                if (this.tower.angle > 360) {
+                    this.tower.angle -= 360;
+                }
+            }
+        }
+
+        if (Math.abs(targetNum - this.tower.angle) < rotateSpeedTemp) {
+            this.tower.angle = targetNum;
+        }
+
+
     }
 
 }

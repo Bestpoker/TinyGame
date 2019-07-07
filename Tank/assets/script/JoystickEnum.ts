@@ -16,3 +16,8 @@ export enum SpeedType {
     FAST = 2
 }
 
+export enum ControlType {
+    MOVE = 0,
+    TOWER = 1,
+}
+

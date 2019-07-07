@@ -1,4 +1,4 @@
-import { JoystickType, DirectionType, SpeedType } from "./JoystickEnum";
+import { JoystickType, DirectionType, SpeedType, ControlType } from "./JoystickEnum";
 import UI from "./UI";
 import Game from "./Game";
 
@@ -50,6 +50,9 @@ export default class Joystick extends cc.Component {
 
   isPressingD = false;
 
+  @property({ type: cc.Enum(ControlType) })
+  controlType = ControlType.MOVE;
+
 
   // LIFE-CYCLE CALLBACKS:
 
@@ -75,47 +78,50 @@ export default class Joystick extends cc.Component {
 
   checkKeyCode(dt){
 
-    if(Game.instance.player == null){
-      return;
-    }
-
-    if(this.p.x != 0 || this.p.y != 0){
-      return;
-    }
-
-    if(this.isPressingW){
-      this.keyDir.y = 1;
-    }
-    else if(this.isPressingS){
-      this.keyDir.y = -1;
-    }
-    else{
-      this.keyDir.y = 0;
-    }
-
-    if(this.isPressingA){
-      this.keyDir.x = -1;
-    }
-    else if(this.isPressingD){
-      this.keyDir.x = 1;
-    }
-    else{
-      this.keyDir.x = 0;
-    }
-
-    if (this.keyDir.x != 0 || this.keyDir.y != 0) {
-      if (Game.instance.player._speedType != SpeedType.FAST) {
-        Game.instance.player._speedType = SpeedType.FAST;
-        Game.instance.player.moveDir = this.keyDir;
+    if(this.controlType == ControlType.MOVE){
+      if(Game.instance.player == null){
+        return;
+      }
+  
+      if(this.p.x != 0 || this.p.y != 0){
+        return;
+      }
+  
+      if(this.isPressingW){
+        this.keyDir.y = 1;
+      }
+      else if(this.isPressingS){
+        this.keyDir.y = -1;
+      }
+      else{
+        this.keyDir.y = 0;
+      }
+  
+      if(this.isPressingA){
+        this.keyDir.x = -1;
+      }
+      else if(this.isPressingD){
+        this.keyDir.x = 1;
+      }
+      else{
+        this.keyDir.x = 0;
+      }
+  
+      if (this.keyDir.x != 0 || this.keyDir.y != 0) {
+        if (Game.instance.player._speedType != SpeedType.FAST) {
+          Game.instance.player._speedType = SpeedType.FAST;
+          Game.instance.player.moveDir = this.keyDir;
+        }
+      }
+  
+      if (this.keyDir.x == 0 && this.keyDir.y == 0) {
+        if (Game.instance.player._speedType != SpeedType.STOP) {
+          Game.instance.player._speedType = SpeedType.STOP;
+          Game.instance.player.moveDir = this.keyDir;
+        }
       }
     }
-
-    if (this.keyDir.x == 0 && this.keyDir.y == 0) {
-      if (Game.instance.player._speedType != SpeedType.STOP) {
-        Game.instance.player._speedType = SpeedType.STOP;
-        Game.instance.player.moveDir = this.keyDir;
-      }
-    }
+    
     
 
   }
@@ -130,9 +136,12 @@ export default class Joystick extends cc.Component {
   }
 
   _initKeyCodeEvent() {
-    const self = this;
-    cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, self.onKeyDown, self);
-    cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, self.onKeyUp, self);
+    if(this.controlType == ControlType.MOVE){
+      const self = this;
+      cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, self.onKeyDown, self);
+      cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP, self.onKeyUp, self);
+    }
+    
   }
 
   _touchStartEvent(event) {
@@ -184,17 +193,28 @@ export default class Joystick extends cc.Component {
     if (this._radius > distance) {
       this.dot.setPosition(cc.v2(posX, posY));
 
-      Game.instance.player._speedType = SpeedType.NORMAL;
+      if(this.controlType == ControlType.MOVE){
+        Game.instance.player._speedType = SpeedType.NORMAL;
+      }
+      
     } else {
       // 控杆永远保持在圈内，并在圈内跟随触摸更新角度
       const x = this._stickPos.x + this.p.x * this._radius;
       const y = this._stickPos.y + this.p.y * this._radius;
       this.dot.setPosition(cc.v2(x, y));
-
-      Game.instance.player._speedType = SpeedType.FAST;
+      if(this.controlType == ControlType.MOVE){
+        Game.instance.player._speedType = SpeedType.FAST;
+      }
+      
     }
 
-    Game.instance.player.moveDir = this.p;
+    if(this.controlType == ControlType.MOVE){
+      Game.instance.player.moveDir = this.p;
+    }
+    else{
+      Game.instance.player.towerDic = this.p;
+    }
+    
   }
 
   _touchEndEvent() {
@@ -202,16 +222,15 @@ export default class Joystick extends cc.Component {
     if (this.joystickType == JoystickType.FOLLOW) {
       this.node.opacity = 0;
     }
-    Game.instance.player._speedType = SpeedType.STOP;
-    this.p = cc.Vec2.ZERO;
+
+    if(this.controlType == ControlType.MOVE){
+      Game.instance.player._speedType = SpeedType.STOP;
+      this.p = cc.Vec2.ZERO;
+    }
+    
+    
   }
 
-  // methods
-
-  setPlayerSpeed() {
-    Game.instance.player.moveDir = this.p;
-    Game.instance.player._speedType = SpeedType.NORMAL;
-  }
 
   onKeyDown(event) {
     
