@@ -1,4 +1,7 @@
+import Entity from "./Entity";
+import Bullet from "./Bullet";
 import Tank from "./Tank";
+import Game from "./Game";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -13,13 +16,15 @@ import Tank from "./Tank";
 const {ccclass, property} = cc._decorator;
 
 @ccclass
-export default class AI extends cc.Component {
+export default class GameItem extends Entity {
 
-    tank: Tank = null;
-
-    isWorking: boolean = false;
+    
 
     // LIFE-CYCLE CALLBACKS:
+
+    Init(){
+        super.Init();
+    }
 
     onLoad () {
         
@@ -30,5 +35,23 @@ export default class AI extends cc.Component {
     }
 
     // update (dt) {}
+
+    onCollisionEnter(other: cc.BoxCollider, self: cc.BoxCollider) {
+        // console.log('on collision enter');
+
+        var otherTank = other.getComponent(Tank);
+        if (otherTank != null) {
+            otherTank.BeAttacked(this.currentHp);
+            return;
+        }
+    }
+
+    BeAttacked(value: number){
+        this.currentHp -= value;
+        if(this.currentHp <= 0){
+            Game.instance.DestroyGameItem(this);
+        }
+    }
+
     
 }

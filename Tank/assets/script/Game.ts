@@ -2,6 +2,8 @@ import Data from "./Data";
 import Bullet from "./Bullet";
 import Tank from "./Tank";
 import { MyNodeList } from "./MyNodeList";
+import GameItem from "./GameItem";
+import Entity from "./Entity";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -41,6 +43,9 @@ export default class Game extends cc.Component {
     @property(cc.Node)
     hitPrefab: cc.Node = null;
 
+    @property(cc.Node)
+    gameItemPrefab: cc.Node = null;
+
     player: Tank = null;
 
     allTanks: Tank[] = [];
@@ -48,6 +53,10 @@ export default class Game extends cc.Component {
     bulletPool: cc.Node[] = [];
 
     tankPool: cc.Node[] = [];
+
+    allGameItems: GameItem[] = [];
+
+    gameItemPool: cc.Node[] = [];
 
     // tankNodeList: MyNodeList<Tank> = new MyNodeList<Tank>();
 
@@ -66,7 +75,9 @@ export default class Game extends cc.Component {
 
         this.CreatePlayer();
 
-        this.CreateEnemy();
+        // this.CreateEnemy();
+
+        this.CreateItem();
 
     }
 
@@ -144,43 +155,149 @@ export default class Game extends cc.Component {
         player.node.angle = 90;
         player.teamID = 1;
         player.roleID = 1;
+        player.maxHp = 100;
+
         this.player = player;
     }
 
     CreateEnemy() {
         for (let index = 0; index < 50; index++) {
             var enemy = this.CreateTank();
-            enemy.node.position = cc.v2(100 * (-25 + index), 40 * (-25 + index));
+            enemy.node.position = cc.v2(100 * (-25 + index), 100 * (-25 + index));
             enemy.node.angle = 90;
             enemy.teamID = index + 2;
             enemy.roleID = index + 2;
             enemy.isAI = true;
+            enemy.maxHp = 10;
         }
+    }
+
+    CreateItem() {
+        // for (let index = 0; index < 50; index++) {
+        //     var gameItem = this.CreateGameItem();
+        //     gameItem.node.position = cc.v2(100 * (-25 + index), 100 * (25 - index));
+        //     gameItem.node.angle = 0;
+        //     gameItem.maxHp = 20;
+        // }
+
+        var gameItem = this.CreateGameItem();
+            gameItem.node.position = cc.v2(0, 800);
+            gameItem.node.angle = 0;
+            gameItem.maxHp = 20;
+
+            var gameItem = this.CreateGameItem();
+            gameItem.node.position = cc.v2(0, 1000);
+            gameItem.node.angle = 0;
+            gameItem.maxHp = 20;
+
+            var gameItem = this.CreateGameItem();
+            gameItem.node.position = cc.v2(0, 1200);
+            gameItem.node.angle = 0;
+            gameItem.maxHp = 20;
+
+            var gameItem = this.CreateGameItem();
+            gameItem.node.position = cc.v2(0, 1400);
+            gameItem.node.angle = 0;
+            gameItem.maxHp = 20;
+
+            var gameItem = this.CreateGameItem();
+            gameItem.node.position = cc.v2(0, 1600);
+            gameItem.node.angle = 0;
+            gameItem.maxHp = 20;
+
+            var gameItem = this.CreateGameItem();
+            gameItem.node.position = cc.v2(0, 1800);
+            gameItem.node.angle = 0;
+            gameItem.maxHp = 20;
+
+            var gameItem = this.CreateGameItem();
+            gameItem.node.position = cc.v2(0, 500);
+            gameItem.node.angle = 0;
+            gameItem.maxHp = 20;
 
     }
 
+    CreateGameItem(): GameItem {
+        var gameItem: cc.Node = null;
+        if (this.gameItemPool.length > 0) {
+            gameItem = this.gameItemPool.pop();
+        }
+        else {
+            gameItem = cc.instantiate(this.gameItemPrefab);
+        }
 
+        gameItem.active = true;
+        gameItem.setParent(this.tankParent);
 
-    SearchEnemyWithNearest(tank: Tank): Tank {
-        var target: Tank = null;
-        var dis = -1;
+        var result = gameItem.getComponent(GameItem);
+        result.Init();
+
+        this.allGameItems.push(result);
+
+        return result;
+    }
+
+    DestroyGameItem(gameItem: GameItem) {
+        gameItem.isDead = true;
+        gameItem.node.active = false;
+        this.gameItemPool.push(gameItem.node);
+
+        var index = this.allGameItems.indexOf(gameItem);
+        if (index > -1) {
+            this.allGameItems.splice(index, 1);
+        }
+    }
+
+    SearchEnemyWithNearest(tank: Tank): Entity {
+        var tankTarget: Entity = null;
+        var tankDis = -1;
+
         this.allTanks.forEach(element => {
             if (element != tank && !element.isDead) {
                 var tempDis = element.node.position.sub(tank.node.position).mag();
-                if (dis == -1) {
-                    target = element;
-                    dis = tempDis;
+                if (tankDis == -1) {
+                    tankTarget = element;
+                    tankDis = tempDis;
                 }
                 else {
-                    if (tempDis < dis) {
-                        target = element;
-                        dis = tempDis;
+                    if (tempDis < tankDis) {
+                        tankTarget = element;
+                        tankDis = tempDis;
                     }
                 }
             }
         });
 
-        return target;
+        var gameItemTarget: Entity = null;
+        var gameItemDis = -1;
+
+        this.allGameItems.forEach(element => {
+            if (!element.isDead) {
+                var tempDis = element.node.position.sub(tank.node.position).mag();
+                if (gameItemDis == -1) {
+                    gameItemTarget = element;
+                    gameItemDis = tempDis;
+                }
+                else {
+                    if (tempDis < gameItemDis) {
+                        gameItemTarget = element;
+                        gameItemDis = tempDis;
+                    }
+                }
+            }
+        });
+
+        if(gameItemTarget != null){
+            if(tankDis <= tank.bulletAttackRange){
+                return tankTarget;
+            }
+            else{
+                return gameItemTarget;
+            }
+        }
+        else{
+            return gameItemTarget;
+        }
     }
 
 

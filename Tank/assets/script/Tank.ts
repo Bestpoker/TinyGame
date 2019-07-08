@@ -2,6 +2,8 @@ import { SpeedType } from "./JoystickEnum";
 import Data from "./Data";
 import Game from "./Game";
 import Bullet from "./Bullet";
+import Entity from "./Entity";
+import GameItem from "./GameItem";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -16,7 +18,7 @@ import Bullet from "./Bullet";
 const { ccclass, property } = cc._decorator;
 
 @ccclass
-export default class Tank extends cc.Component {
+export default class Tank extends Entity {
 
     @property(cc.Vec2)
     moveDir = cc.v2(0, 1);
@@ -50,8 +52,7 @@ export default class Tank extends cc.Component {
     @property(cc.Node)
     bulletStartNode: cc.Node = null;
 
-    @property(Tank)
-    target: Tank = null;
+    target: Entity = null;
 
     rotateSpeed: number = 50;
 
@@ -71,13 +72,13 @@ export default class Tank extends cc.Component {
     @property(Number)
     roleID: number = 0;
 
-    isDead = false;
-
     isAI = false;
 
     bulletAttackRange = 500;
 
     bulletMoveSpeed = 1000;
+
+    bulletAttackHp = 2;
 
     attackSpeed = 1;
 
@@ -90,6 +91,7 @@ export default class Tank extends cc.Component {
     // LIFE-CYCLE CALLBACKS:
 
     Init() {
+        super.Init();
         this._speedType = SpeedType.STOP;
         this._moveSpeed = 0;
         this.track1.stop();
@@ -99,13 +101,10 @@ export default class Tank extends cc.Component {
         this.target = null;
         this.teamID = 0;
         this.roleID = 0;
-        this.isDead = false;
         this.isAI = false;
-        // this.bulletAttackRange = 0;
-        // this.bulletMoveSpeed = 0;
-        // this.attackSpeed = 0;
         this.attackLife = 0;
         this.moveRotateDir = false;
+        this.moveRotateCD = 0;
     }
 
     onLoad() {
@@ -273,12 +272,12 @@ export default class Tank extends cc.Component {
 
     }
 
-    SetMoveRotateDir(){
-        if(this.moveRotateCD > 5){
+    SetMoveRotateDir() {
+        if (this.moveRotateCD > 5) {
             this.moveRotateDir = !this.moveRotateDir;
             this.moveRotateCD = 0;
         }
-        
+
     }
 
 
@@ -305,7 +304,7 @@ export default class Tank extends cc.Component {
         var bullet = Game.instance.CreateBullet();
         bullet.roleID = this.roleID;
         bullet.teamID = this.teamID;
-        bullet.SetInfo(this.bulletAttackRange, this.bulletMoveSpeed);
+        bullet.SetInfo(this.bulletAttackRange, this.bulletMoveSpeed, this.bulletAttackHp);
 
         var p = this.bulletStartNode.parent.convertToWorldSpaceAR(this.bulletStartNode.position);
         var pos = Game.instance.bulletParent.convertToNodeSpaceAR(p);
@@ -329,17 +328,15 @@ export default class Tank extends cc.Component {
     onCollisionEnter(other: cc.BoxCollider, self: cc.BoxCollider) {
         // console.log('on collision enter');
 
-        var otherBullet = other.getComponent(Bullet);
-        if (otherBullet != null) {
-            if (otherBullet.roleID != this.roleID) {
-                // Game.instance.DestroyTank(this);
-                return;
-            }
+        var otherTank = other.getComponent(Tank);
+        if (otherTank != null) {
+            otherTank.BeAttacked(this.currentHp);
+            return;
         }
 
-        var otherPlayer = other.getComponent(Tank);
-        if (otherPlayer != null) {
-            // Game.instance.DestroyTank(this);
+        var otherGameItem = other.getComponent(GameItem);
+        if (otherGameItem != null) {
+            otherGameItem.BeAttacked(this.currentHp);
             return;
         }
     }
@@ -516,6 +513,13 @@ export default class Tank extends cc.Component {
         }
 
 
+    }
+
+    BeAttacked(value: number){
+        this.currentHp -= value;
+        if(this.currentHp <= 0){
+            Game.instance.DestroyTank(this);
+        }
     }
 
 }

@@ -1,5 +1,6 @@
 import Game from "./Game";
 import Tank from "./Tank";
+import GameItem from "./GameItem";
 
 // Learn TypeScript:
 //  - [Chinese] https://docs.cocos.com/creator/manual/zh/scripting/typescript.html
@@ -26,13 +27,15 @@ export default class Bullet extends cc.Component {
 
     private maxFlyTime = 0;
 
+    attackHp = 0;
+
     roleID = 0;
 
     teamID = 0;
 
     isDead = false;
 
-    Init(){
+    Init() {
         this.moveSpeed = 0;
         this.attackRange = 0;
         this.life = 0;
@@ -40,30 +43,31 @@ export default class Bullet extends cc.Component {
         this.roleID = 0;
         this.teamID = 0;
         this.isDead = false;
+        this.attackHp = 0;
     }
 
     // onLoad () {
-        
+
     // }
 
     start() {
-        
+
     }
 
     update(dt) {
 
-        if(this.isDead){
+        if (this.isDead) {
             return;
         }
 
-        if(this.life >= this.maxFlyTime){
+        if (this.life >= this.maxFlyTime) {
             Game.instance.DestroyBullet(this);
             return;
         }
 
         this.life += dt;
 
-        if(this.life > this.maxFlyTime){
+        if (this.life > this.maxFlyTime) {
             dt = dt - (this.life - this.maxFlyTime);
             this.life = this.maxFlyTime;
         }
@@ -79,29 +83,34 @@ export default class Bullet extends cc.Component {
         this.node.x += dt * dir.x * this.moveSpeed;
         this.node.y += dt * dir.y * this.moveSpeed;
 
-        
+
     }
 
     onCollisionEnter(other: any, self: any) {
         // console.log('on collision enter');
 
-        if(this.isDead){
-            return;
-        }
-
-        var otherPlayer = other.getComponent(Tank);
-        if(otherPlayer != null){
-            if(otherPlayer.roleID != this.roleID){
+        var otherTank = other.getComponent(Tank) as Tank;
+        if (otherTank != null) {
+            if (otherTank.roleID != this.roleID) {
+                otherTank.BeAttacked(this.attackHp);
                 Game.instance.DestroyBullet(this);
                 return;
             }
         }
-        
+
+        var otherGameItem = other.getComponent(GameItem) as GameItem;
+        if (otherGameItem != null) {
+            otherGameItem.BeAttacked(this.attackHp);
+            Game.instance.DestroyBullet(this);
+            return;
+        }
+
     }
 
-    SetInfo(attackRange: number, moveSpeed: number){
+    SetInfo(attackRange: number, moveSpeed: number, attackHp: number) {
         this.moveSpeed = moveSpeed;
         this.attackRange = attackRange;
         this.maxFlyTime = attackRange / moveSpeed;
+        this.attackHp = attackHp;
     }
 }
