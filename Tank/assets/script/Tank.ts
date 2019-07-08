@@ -83,6 +83,10 @@ export default class Tank extends cc.Component {
 
     attackLife = 0;
 
+    moveRotateDir = false;
+
+    moveRotateCD = 0;
+
     // LIFE-CYCLE CALLBACKS:
 
     Init() {
@@ -101,6 +105,7 @@ export default class Tank extends cc.Component {
         // this.bulletMoveSpeed = 0;
         // this.attackSpeed = 0;
         this.attackLife = 0;
+        this.moveRotateDir = false;
     }
 
     onLoad() {
@@ -124,7 +129,7 @@ export default class Tank extends cc.Component {
 
         this.RotateTower(dt);
 
-        this.attack(dt);
+        // this.attack(dt);
 
         this.DoAIWork(dt);
 
@@ -134,9 +139,9 @@ export default class Tank extends cc.Component {
 
     }
 
-    attack(dt){
+    attack(dt) {
         this.attackLife += dt;
-        if(this.attackLife >= this.attackSpeed){
+        if (this.attackLife >= this.attackSpeed) {
             this.attackLife = this.attackLife - this.attackSpeed;
             this.CreateBullet();
         }
@@ -242,27 +247,47 @@ export default class Tank extends cc.Component {
         this.node.x += dt * dir.x * this._moveSpeed;
         this.node.y += dt * dir.y * this._moveSpeed;
 
-        if (this.node.x < -Data.instance.mapMinX + this.playerHalfSize) {
-            this.node.x = -Data.instance.mapMinX + this.playerHalfSize;
+        var left = -Data.instance.mapMinX + this.playerHalfSize;
+        var right = Data.instance.mapMinX - this.playerHalfSize;
+        var up = Data.instance.mapMinY - this.playerHalfSize;
+        var down = -Data.instance.mapMinY + this.playerHalfSize;
+
+        if (this.node.x < left) {
+            this.node.x = left;
+            this.SetMoveRotateDir();
         }
-        else if (this.node.x > Data.instance.mapMinX - this.playerHalfSize) {
-            this.node.x = Data.instance.mapMinX - this.playerHalfSize;
+        else if (this.node.x > right) {
+            this.node.x = right;
+            this.SetMoveRotateDir();
         }
 
-        if (this.node.y < -Data.instance.mapMinY + this.playerHalfSize) {
-            this.node.y = -Data.instance.mapMinY + this.playerHalfSize;
+        if (this.node.y < down) {
+            this.node.y = down;
+            this.SetMoveRotateDir();
         }
-        else if (this.node.y > Data.instance.mapMinY - this.playerHalfSize) {
-            this.node.y = Data.instance.mapMinY - this.playerHalfSize;
+        else if (this.node.y > up) {
+            this.node.y = up;
+            this.SetMoveRotateDir();
         }
 
 
     }
 
+    SetMoveRotateDir(){
+        if(this.moveRotateCD > 5){
+            this.moveRotateDir = !this.moveRotateDir;
+            this.moveRotateCD = 0;
+        }
+        
+    }
+
 
     DoAIWork(dt) {
         if (this.isAI) {
+            this.moveRotateCD += dt;
+            this.FindTarget();
             this.AimTarget(dt);
+            this.AutoFindRoad();
         }
     }
 
@@ -290,10 +315,14 @@ export default class Tank extends cc.Component {
         var p1 = this.tower.parent.convertToWorldSpaceAR(this.tower.position);
         var dir = p.sub(p1);
 
-        var angle = dir.signAngle(cc.v2(1, 0));
+        if (dir.x != 0 || dir.y != 0) {
+            var angle = dir.signAngle(cc.v2(1, 0));
 
-        var degree = angle / Math.PI * 180;
-        bullet.node.angle = -degree;
+            var degree = angle / Math.PI * 180;
+            bullet.node.angle = -degree;
+        }
+
+
 
     }
 
@@ -303,23 +332,65 @@ export default class Tank extends cc.Component {
         var otherBullet = other.getComponent(Bullet);
         if (otherBullet != null) {
             if (otherBullet.roleID != this.roleID) {
-                this.node.active = false;
-                this.isDead = true;
+                // Game.instance.DestroyTank(this);
                 return;
             }
         }
 
         var otherPlayer = other.getComponent(Tank);
         if (otherPlayer != null) {
-            this.node.active = false;
-            this.isDead = true;
+            // Game.instance.DestroyTank(this);
             return;
+        }
+    }
+
+    FindTarget() {
+        var target = null;
+        if (this.target == null) {
+            target = Game.instance.SearchEnemyWithNearest(this);
+        }
+        else {
+            var tempDis = this.node.position.sub(this.target.node.position).mag();
+            if (tempDis > this.bulletAttackRange * 0.7) {
+                target = Game.instance.SearchEnemyWithNearest(this);
+            }
+        }
+
+        if (target != null) {
+            this.SetTarget(target);
+        }
+    }
+
+    AutoFindRoad() {
+        if (this.target != null && !this.target.isDead) {
+
+            //计算出朝向
+
+            var temp = this.target.node.position.sub(this.node.position);
+            var dir = temp.normalize();
+            var dis = temp.mag();
+            if (dis > this.bulletAttackRange) {
+                this.moveDir = dir;
+            }
+            else if (dis < this.bulletAttackRange * 0.5) {
+                this.moveDir = cc.v2(-dir.x, -dir.y);
+            }
+            else {
+                if (this.moveRotateDir) {
+                    this.moveDir = cc.v2(dir.y, -dir.x);
+                }
+                else {
+                    this.moveDir = cc.v2(-dir.y, dir.x);
+                }
+
+            }
+            this._speedType = SpeedType.FAST;
+
         }
     }
 
     SetTarget(target: Tank) {
         this.target = target;
-
     }
 
     AimTarget(dt) {
@@ -331,11 +402,13 @@ export default class Tank extends cc.Component {
             //计算出朝向
             var dir = pos.sub(this.tower.position);
 
+            if (dir.x != 0 || dir.y != 0) {
+                var angle = dir.signAngle(cc.v2(1, 0));
+                var degree = angle / Math.PI * 180;
+                targetNum = -degree;
+            }
 
-            var angle = dir.signAngle(cc.v2(1, 0));
 
-            var degree = angle / Math.PI * 180;
-            targetNum = -degree;
         }
 
         if (targetNum < 0) {
@@ -376,6 +449,8 @@ export default class Tank extends cc.Component {
         if (Math.abs(targetNum - this.tower.angle) < rotateSpeedTemp) {
             this.tower.angle = targetNum;
         }
+
+
     }
 
     RotateTower(dt) {
@@ -383,7 +458,7 @@ export default class Tank extends cc.Component {
         if (this.towerDic.x == 0 && this.towerDic.y == 0) {
             return;
         }
-        
+
         var targetNum = 0;
 
         var angle = this.towerDic.signAngle(cc.v2(1, 0));
@@ -400,7 +475,7 @@ export default class Tank extends cc.Component {
         if (targetNum < 0) {
             targetNum += 360;
         }
-        
+
         // this.tower.angle = targetNum;
 
         // return;

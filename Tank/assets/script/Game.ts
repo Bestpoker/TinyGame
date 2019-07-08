@@ -49,7 +49,7 @@ export default class Game extends cc.Component {
 
     tankPool: cc.Node[] = [];
 
-    tankNodeList: MyNodeList<Tank> = new MyNodeList<Tank>();
+    // tankNodeList: MyNodeList<Tank> = new MyNodeList<Tank>();
 
 
     // LIFE-CYCLE CALLBACKS:
@@ -63,11 +63,11 @@ export default class Game extends cc.Component {
     }
 
     start() {
-        
+
         this.CreatePlayer();
 
         this.CreateEnemy();
-        
+
     }
 
     // update (dt) {}
@@ -77,7 +77,7 @@ export default class Game extends cc.Component {
     lateUpdate() {
         Game.instance.mainCamera.position = this.player.node.position;
 
-        this.tankNodeList.print();
+        // this.tankNodeList.print();
     }
 
     CreateBullet(): Bullet {
@@ -105,7 +105,7 @@ export default class Game extends cc.Component {
         this.bulletPool.push(bullet.node);
     }
 
-    CreateTank(): Tank{
+    CreateTank(): Tank {
         var tank: cc.Node = null;
         if (this.tankPool.length > 0) {
             tank = this.tankPool.pop();
@@ -122,7 +122,7 @@ export default class Game extends cc.Component {
 
         this.allTanks.push(result);
 
-        this.tankNodeList.add(result);
+        // this.tankNodeList.add(result);
 
         return result;
     }
@@ -131,14 +131,14 @@ export default class Game extends cc.Component {
         tank.isDead = true;
         tank.node.active = false;
         this.tankPool.push(tank.node);
-        
+
         var index = this.allTanks.indexOf(tank);
         if (index > -1) {
             this.allTanks.splice(index, 1);
         }
     }
 
-    CreatePlayer(){
+    CreatePlayer() {
         var player = this.CreateTank();
         player.node.position = cc.Vec2.ZERO;
         player.node.angle = 90;
@@ -147,23 +147,40 @@ export default class Game extends cc.Component {
         this.player = player;
     }
 
-    CreateEnemy(){
-        var enemy = this.CreateTank();
-        enemy.node.position = cc.v2(0, 500);
-        enemy.node.angle = 90;
-        enemy.teamID = 2;
-        enemy.roleID = 2;
-        enemy.isAI = true;
+    CreateEnemy() {
+        for (let index = 0; index < 50; index++) {
+            var enemy = this.CreateTank();
+            enemy.node.position = cc.v2(100 * (-25 + index), 40 * (-25 + index));
+            enemy.node.angle = 90;
+            enemy.teamID = index + 2;
+            enemy.roleID = index + 2;
+            enemy.isAI = true;
+        }
+
     }
 
 
-    
-    SearchEnemyWithNearest(tank: Tank){
+
+    SearchEnemyWithNearest(tank: Tank): Tank {
+        var target: Tank = null;
+        var dis = -1;
         this.allTanks.forEach(element => {
-            if(element != tank){
-                
+            if (element != tank && !element.isDead) {
+                var tempDis = element.node.position.sub(tank.node.position).mag();
+                if (dis == -1) {
+                    target = element;
+                    dis = tempDis;
+                }
+                else {
+                    if (tempDis < dis) {
+                        target = element;
+                        dis = tempDis;
+                    }
+                }
             }
         });
+
+        return target;
     }
 
 
