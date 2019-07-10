@@ -75,7 +75,7 @@ export default class Game extends cc.Component {
 
         this.CreatePlayer();
 
-        // this.CreateEnemy();
+        this.CreateEnemy();
 
         this.CreateItem();
 
@@ -155,7 +155,7 @@ export default class Game extends cc.Component {
         player.node.angle = 90;
         player.teamID = 1;
         player.roleID = 1;
-        player.maxHp = 100;
+        player.maxHp = 300;
 
         this.player = player;
     }
@@ -163,57 +163,57 @@ export default class Game extends cc.Component {
     CreateEnemy() {
         for (let index = 0; index < 50; index++) {
             var enemy = this.CreateTank();
-            enemy.node.position = cc.v2(100 * (-25 + index), 100 * (-25 + index));
+            enemy.node.position = cc.v2(150 * (-15 + index), 150 * (-15 + index));
             enemy.node.angle = 90;
             enemy.teamID = index + 2;
             enemy.roleID = index + 2;
             enemy.isAI = true;
-            enemy.maxHp = 10;
+            enemy.maxHp = 30;
         }
     }
 
     CreateItem() {
-        // for (let index = 0; index < 50; index++) {
-        //     var gameItem = this.CreateGameItem();
-        //     gameItem.node.position = cc.v2(100 * (-25 + index), 100 * (25 - index));
-        //     gameItem.node.angle = 0;
-        //     gameItem.maxHp = 20;
-        // }
-
-        var gameItem = this.CreateGameItem();
-            gameItem.node.position = cc.v2(0, 800);
-            gameItem.node.angle = 0;
-            gameItem.maxHp = 20;
-
+        for (let index = 0; index < 50; index++) {
             var gameItem = this.CreateGameItem();
-            gameItem.node.position = cc.v2(0, 1000);
+            gameItem.node.position = cc.v2(100 * (-25 + index), 100 * (25 - index));
             gameItem.node.angle = 0;
             gameItem.maxHp = 20;
+        }
 
-            var gameItem = this.CreateGameItem();
-            gameItem.node.position = cc.v2(0, 1200);
-            gameItem.node.angle = 0;
-            gameItem.maxHp = 20;
+        // var gameItem = this.CreateGameItem();
+        // gameItem.node.position = cc.v2(0, 800);
+        // gameItem.node.angle = 0;
+        // gameItem.maxHp = 20;
 
-            var gameItem = this.CreateGameItem();
-            gameItem.node.position = cc.v2(0, 1400);
-            gameItem.node.angle = 0;
-            gameItem.maxHp = 20;
+        // var gameItem = this.CreateGameItem();
+        // gameItem.node.position = cc.v2(0, 1000);
+        // gameItem.node.angle = 0;
+        // gameItem.maxHp = 20;
 
-            var gameItem = this.CreateGameItem();
-            gameItem.node.position = cc.v2(0, 1600);
-            gameItem.node.angle = 0;
-            gameItem.maxHp = 20;
+        // var gameItem = this.CreateGameItem();
+        // gameItem.node.position = cc.v2(0, 1200);
+        // gameItem.node.angle = 0;
+        // gameItem.maxHp = 20;
 
-            var gameItem = this.CreateGameItem();
-            gameItem.node.position = cc.v2(0, 1800);
-            gameItem.node.angle = 0;
-            gameItem.maxHp = 20;
+        // var gameItem = this.CreateGameItem();
+        // gameItem.node.position = cc.v2(0, 1400);
+        // gameItem.node.angle = 0;
+        // gameItem.maxHp = 20;
 
-            var gameItem = this.CreateGameItem();
-            gameItem.node.position = cc.v2(0, 500);
-            gameItem.node.angle = 0;
-            gameItem.maxHp = 20;
+        // var gameItem = this.CreateGameItem();
+        // gameItem.node.position = cc.v2(0, 1600);
+        // gameItem.node.angle = 0;
+        // gameItem.maxHp = 20;
+
+        // var gameItem = this.CreateGameItem();
+        // gameItem.node.position = cc.v2(0, 1800);
+        // gameItem.node.angle = 0;
+        // gameItem.maxHp = 20;
+
+        // var gameItem = this.CreateGameItem();
+        // gameItem.node.position = cc.v2(0, 500);
+        // gameItem.node.angle = 0;
+        // gameItem.maxHp = 20;
 
     }
 
@@ -287,15 +287,15 @@ export default class Game extends cc.Component {
             }
         });
 
-        if(gameItemTarget != null){
-            if(tankDis <= tank.bulletAttackRange){
+        if (gameItemTarget != null) {
+            if (tankDis <= tank.bulletAttackRange) {
                 return tankTarget;
             }
-            else{
+            else {
                 return gameItemTarget;
             }
         }
-        else{
+        else {
             return gameItemTarget;
         }
     }

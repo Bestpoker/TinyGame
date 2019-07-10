@@ -36,15 +36,6 @@ export default class GameItem extends Entity {
 
     // update (dt) {}
 
-    onCollisionEnter(other: cc.BoxCollider, self: cc.BoxCollider) {
-        // console.log('on collision enter');
-
-        var otherTank = other.getComponent(Tank);
-        if (otherTank != null) {
-            otherTank.BeAttacked(this.currentHp);
-            return;
-        }
-    }
 
     BeAttacked(value: number){
         this.currentHp -= value;

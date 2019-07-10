@@ -128,7 +128,7 @@ export default class Tank extends Entity {
 
         this.RotateTower(dt);
 
-        // this.attack(dt);
+        this.attack(dt);
 
         this.DoAIWork(dt);
 
@@ -325,18 +325,29 @@ export default class Tank extends Entity {
 
     }
 
+    lastCollsionTank :Tank = null;
+
     onCollisionEnter(other: cc.BoxCollider, self: cc.BoxCollider) {
         // console.log('on collision enter');
-
+        
         var otherTank = other.getComponent(Tank);
         if (otherTank != null) {
-            otherTank.BeAttacked(this.currentHp);
+            if(this.lastCollsionTank == otherTank){
+                this.lastCollsionTank = null;
+                return;
+            }
+            otherTank.lastCollsionTank = this;
+            var temp = this.currentHp;
+            this.BeAttacked(otherTank.currentHp);
+            otherTank.BeAttacked(temp);
             return;
         }
 
         var otherGameItem = other.getComponent(GameItem);
         if (otherGameItem != null) {
-            otherGameItem.BeAttacked(this.currentHp);
+            var temp = this.currentHp;
+            this.BeAttacked(otherGameItem.currentHp);
+            otherGameItem.BeAttacked(temp);
             return;
         }
     }
