@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.2" tiledversion="1.2.4" orientation="orthogonal" renderorder="left-down" width="8" height="30" tilewidth="128" tileheight="128" infinite="0" nextlayerid="2" nextobjectid="1">
+ <tileset firstgid="1" source="ground.tsx"/>
+ <layer id="1" name="block" width="8" height="30">
+  <data encoding="base64" compression="zlib">
+   eJxjZGBgYIRiGGDEgtEBPjl0NSNFnhB/oN2HS36oxO9QDV9C8oTCHx8GAJXgAFE=
+  </data>
+ </layer>
+</map>

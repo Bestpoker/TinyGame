@@ -68,16 +68,17 @@ export default class Game extends cc.Component {
         Data.instance.mapMinX = this.backGround.width / 2;
         Data.instance.mapMinY = this.backGround.height / 2;
 
-        cc.director.getCollisionManager().enabled = true;
+        // cc.director.getCollisionManager().enabled = true;
+        cc.director.getPhysicsManager().enabled = true;
     }
 
     start() {
 
         this.CreatePlayer();
 
-        this.CreateEnemy();
+        // this.CreateEnemy();
 
-        this.CreateItem();
+        // this.CreateItem();
 
     }
 
@@ -86,7 +87,7 @@ export default class Game extends cc.Component {
 
 
     lateUpdate() {
-        Game.instance.mainCamera.position = this.player.node.position;
+        Game.instance.mainCamera.y = this.player.node.y;
 
         // this.tankNodeList.print();
     }
@@ -151,7 +152,7 @@ export default class Game extends cc.Component {
 
     CreatePlayer() {
         var player = this.CreateTank();
-        player.node.position = cc.Vec2.ZERO;
+        player.node.position = cc.v2(0, -200);
         player.node.angle = 90;
         player.teamID = 1;
         player.roleID = 1;
@@ -287,15 +288,30 @@ export default class Game extends cc.Component {
             }
         });
 
-        if (gameItemTarget != null) {
-            if (tankDis <= tank.bulletAttackRange) {
+        // if (gameItemTarget != null) {
+        //     if (tankDis <= tank.bulletAttackRange) {
+        //         return tankTarget;
+        //     }
+        //     else {
+        //         return gameItemTarget;
+        //     }
+        // }
+        // else {
+        //     return gameItemTarget;
+        // }
+        
+        if(tankTarget != null && gameItemTarget != null){
+            if(tankDis <= gameItemDis){
                 return tankTarget;
             }
-            else {
+            else{
                 return gameItemTarget;
             }
         }
-        else {
+        else if(tankTarget != null){
+            return tankTarget;
+        }
+        else{
             return gameItemTarget;
         }
     }

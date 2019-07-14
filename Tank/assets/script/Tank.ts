@@ -74,9 +74,9 @@ export default class Tank extends Entity {
 
     isAI = false;
 
-    bulletAttackRange = 500;
+    bulletAttackRange = 5000;
 
-    bulletMoveSpeed = 1000;
+    bulletMoveSpeed = 500;
 
     bulletAttackHp = 2;
 
@@ -87,6 +87,8 @@ export default class Tank extends Entity {
     moveRotateDir = false;
 
     moveRotateCD = 0;
+
+    _rigbody: cc.RigidBody = null;
 
     // LIFE-CYCLE CALLBACKS:
 
@@ -108,6 +110,7 @@ export default class Tank extends Entity {
     }
 
     onLoad() {
+        this._rigbody = this.node.getComponent(cc.RigidBody);
         this.gunStartPos = this.gun.position;
         this.gunAction = cc.sequence(cc.moveTo(0.1, this.gunStartPos.x, this.gunStartPos.y - 10), cc.moveTo(0.1, this.gunStartPos.x, this.gunStartPos.y));
     }
@@ -122,7 +125,9 @@ export default class Tank extends Entity {
             return;
         }
 
-        // this.AimTarget(dt);
+        this.FindTarget();
+
+        this.AimTarget(dt);
 
         this.move(dt);
 
@@ -166,6 +171,7 @@ export default class Tank extends Entity {
                 if (this.track2.getAnimationState(this.track2.defaultClip.name).isPlaying) {
                     this.track2.stop();
                 }
+                this._rigbody.linearVelocity = cc.Vec2.ZERO;
                 break;
             case SpeedType.NORMAL:
                 this._moveSpeed = this.normalSpeed;
@@ -199,40 +205,42 @@ export default class Tank extends Entity {
             targetNum += 360;
         }
 
-        var rotateSpeedTemp = this.rotateSpeed * dt;
+        this.node.angle = targetNum;
 
-        if (this.node.angle < targetNum) {
-            if (targetNum - this.node.angle > 180) {
-                this.node.angle -= rotateSpeedTemp;
-                if (this.node.angle < 0) {
-                    this.node.angle += 360;
-                }
-            }
-            else {
-                this.node.angle += rotateSpeedTemp;
-                if (this.node.angle > 360) {
-                    this.node.angle -= 360;
-                }
-            }
-        }
-        else if (this.node.angle > targetNum) {
-            if (this.node.angle - targetNum < 180) {
-                this.node.angle -= rotateSpeedTemp;
-                if (this.node.angle < 0) {
-                    this.node.angle += 360;
-                }
-            }
-            else {
-                this.node.angle += rotateSpeedTemp;
-                if (this.node.angle > 360) {
-                    this.node.angle -= 360;
-                }
-            }
-        }
+        // var rotateSpeedTemp = this.rotateSpeed * dt;
 
-        if (Math.abs(targetNum - this.node.angle) < rotateSpeedTemp) {
-            this.node.angle = targetNum;
-        }
+        // if (this.node.angle < targetNum) {
+        //     if (targetNum - this.node.angle > 180) {
+        //         this.node.angle -= rotateSpeedTemp;
+        //         if (this.node.angle < 0) {
+        //             this.node.angle += 360;
+        //         }
+        //     }
+        //     else {
+        //         this.node.angle += rotateSpeedTemp;
+        //         if (this.node.angle > 360) {
+        //             this.node.angle -= 360;
+        //         }
+        //     }
+        // }
+        // else if (this.node.angle > targetNum) {
+        //     if (this.node.angle - targetNum < 180) {
+        //         this.node.angle -= rotateSpeedTemp;
+        //         if (this.node.angle < 0) {
+        //             this.node.angle += 360;
+        //         }
+        //     }
+        //     else {
+        //         this.node.angle += rotateSpeedTemp;
+        //         if (this.node.angle > 360) {
+        //             this.node.angle -= 360;
+        //         }
+        //     }
+        // }
+
+        // if (Math.abs(targetNum - this.node.angle) < rotateSpeedTemp) {
+        //     this.node.angle = targetNum;
+        // }
 
 
         //由于Math函数接受的是孤度，所以我们先节节点的旋转转化为弧度
@@ -243,31 +251,33 @@ export default class Tank extends Entity {
         dir.normalizeSelf();
 
         //根据方向向量移动位置
-        this.node.x += dt * dir.x * this._moveSpeed;
-        this.node.y += dt * dir.y * this._moveSpeed;
+        // this.node.x += dt * dir.x * this._moveSpeed;
+        // this.node.y += dt * dir.y * this._moveSpeed;
 
-        var left = -Data.instance.mapMinX + this.playerHalfSize;
-        var right = Data.instance.mapMinX - this.playerHalfSize;
-        var up = Data.instance.mapMinY - this.playerHalfSize;
-        var down = -Data.instance.mapMinY + this.playerHalfSize;
+        this._rigbody.linearVelocity  = cc.v2(dir.x * this._moveSpeed, dir.y * this._moveSpeed);
 
-        if (this.node.x < left) {
-            this.node.x = left;
-            this.SetMoveRotateDir();
-        }
-        else if (this.node.x > right) {
-            this.node.x = right;
-            this.SetMoveRotateDir();
-        }
+        // var left = -Data.instance.mapMinX + this.playerHalfSize;
+        // var right = Data.instance.mapMinX - this.playerHalfSize;
+        // var up = Data.instance.mapMinY - this.playerHalfSize;
+        // var down = -Data.instance.mapMinY + this.playerHalfSize;
 
-        if (this.node.y < down) {
-            this.node.y = down;
-            this.SetMoveRotateDir();
-        }
-        else if (this.node.y > up) {
-            this.node.y = up;
-            this.SetMoveRotateDir();
-        }
+        // if (this.node.x < left) {
+        //     this.node.x = left;
+        //     this.SetMoveRotateDir();
+        // }
+        // else if (this.node.x > right) {
+        //     this.node.x = right;
+        //     this.SetMoveRotateDir();
+        // }
+
+        // if (this.node.y < down) {
+        //     this.node.y = down;
+        //     this.SetMoveRotateDir();
+        // }
+        // else if (this.node.y > up) {
+        //     this.node.y = up;
+        //     this.SetMoveRotateDir();
+        // }
 
 
     }
@@ -284,8 +294,6 @@ export default class Tank extends Entity {
     DoAIWork(dt) {
         if (this.isAI) {
             this.moveRotateCD += dt;
-            this.FindTarget();
-            this.AimTarget(dt);
             this.AutoFindRoad();
         }
     }
@@ -313,56 +321,53 @@ export default class Tank extends Entity {
         //计算出朝向
         var p1 = this.tower.parent.convertToWorldSpaceAR(this.tower.position);
         var dir = p.sub(p1);
+        dir = dir.normalize();
 
-        if (dir.x != 0 || dir.y != 0) {
-            var angle = dir.signAngle(cc.v2(1, 0));
-
-            var degree = angle / Math.PI * 180;
-            bullet.node.angle = -degree;
-        }
-
-
+        bullet.SetVelocity(cc.v2(dir.x * this.bulletMoveSpeed, dir.y * this.bulletMoveSpeed));
+        bullet.SetAngle();
 
     }
 
     lastCollsionTank :Tank = null;
 
-    onCollisionEnter(other: cc.BoxCollider, self: cc.BoxCollider) {
-        // console.log('on collision enter');
+    // onCollisionEnter(other: cc.BoxCollider, self: cc.BoxCollider) {
+    //     // console.log('on collision enter');
         
-        var otherTank = other.getComponent(Tank);
-        if (otherTank != null) {
-            if(this.lastCollsionTank == otherTank){
-                this.lastCollsionTank = null;
-                return;
-            }
-            otherTank.lastCollsionTank = this;
-            var temp = this.currentHp;
-            this.BeAttacked(otherTank.currentHp);
-            otherTank.BeAttacked(temp);
-            return;
-        }
+    //     var otherTank = other.getComponent(Tank);
+    //     if (otherTank != null) {
+    //         if(this.lastCollsionTank == otherTank){
+    //             this.lastCollsionTank = null;
+    //             return;
+    //         }
+    //         otherTank.lastCollsionTank = this;
+    //         var temp = this.currentHp;
+    //         this.BeAttacked(otherTank.currentHp);
+    //         otherTank.BeAttacked(temp);
+    //         return;
+    //     }
 
-        var otherGameItem = other.getComponent(GameItem);
-        if (otherGameItem != null) {
-            var temp = this.currentHp;
-            this.BeAttacked(otherGameItem.currentHp);
-            otherGameItem.BeAttacked(temp);
-            return;
-        }
-    }
+    //     var otherGameItem = other.getComponent(GameItem);
+    //     if (otherGameItem != null) {
+    //         var temp = this.currentHp;
+    //         this.BeAttacked(otherGameItem.currentHp);
+    //         otherGameItem.BeAttacked(temp);
+    //         return;
+    //     }
+    // }
 
     FindTarget() {
-        var target = null;
-        if (this.target == null) {
-            target = Game.instance.SearchEnemyWithNearest(this);
-        }
-        else {
-            var tempDis = this.node.position.sub(this.target.node.position).mag();
-            if (tempDis > this.bulletAttackRange * 0.7) {
-                target = Game.instance.SearchEnemyWithNearest(this);
-            }
-        }
+        // var target = null;
+        // if (this.target == null) {
+        //     target = Game.instance.SearchEnemyWithNearest(this);
+        // }
+        // else {
+        //     var tempDis = this.node.position.sub(this.target.node.position).mag();
+        //     if (tempDis > this.bulletAttackRange * 0.7) {
+        //         target = Game.instance.SearchEnemyWithNearest(this);
+        //     }
+        // }
+
+        var target = Game.instance.SearchEnemyWithNearest(this);
 
         if (target != null) {
             this.SetTarget(target);
@@ -397,7 +402,7 @@ export default class Tank extends Entity {
         }
     }
 
-    SetTarget(target: Tank) {
+    SetTarget(target: Entity) {
         this.target = target;
     }
 
